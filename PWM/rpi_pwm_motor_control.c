@@ -110,8 +110,28 @@ INPORT(18u);
 PORT_CONFIG(18u, 2u);
 
 /* Configure PWM clock */
-//PWM_CLK_CTL
-//PWM_CLK_DIV
+/* Stop the PWM first before changing the clock */
+PWM_CTL1 = 0x00;
+usleep(10u);
+
+/* Stop the PWM clock; ENAB=0 */
+PWM_CLK_CTL = 0x5A000001u;
+usleep(110u);
+
+/* Wait till busy flag is cleared */
+while ((PWM_CLK_CTL & 0x80u) != 0u);
+
+/* Set the clock divider */
+PWM_CLK_DIV = (0x5A000000u) | (250u << 12u);
+usleep(10u);
+
+/* Wait till busy flag is cleared */
+while ((PWM_CLK_CTL & 0x80u) != 0u);
+usleep(10u);
+
+/* Start the clock; ENAB=1 */
+PWM_CLK_CTL = 0x5A000011u;
+usleep(10u);
 
 /*
 Example:
@@ -128,7 +148,7 @@ PWM_CTL1 = 0x81;
 usleep(10);
 
 /* Set period of the PWM output */
-PWM_RNG1 = 8192u; /* 8192 = 13.6ms, 13 bit resolution */
+PWM_RNG1 = 1024u; /* 75Hz; 1024 = 10 bit resolution */
 usleep(10);
 
 	/* Run indefinitely */

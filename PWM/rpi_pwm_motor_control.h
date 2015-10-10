@@ -2,11 +2,11 @@
 Name: rpi_pwm_motor_control.h
 Author: Sathees Balya
 Description:
-Header file for rpi_pwm_motor_control.c
+Header file for rpi_motor_control.c
 ==============================================*/
 
-#ifndef RPI_PWM_MOTOR_CONTROL_H
-#define RPI_PWM_MOTOR_CONTROL_H
+#ifndef RPI_READ_TEMP_H
+#define RPI_READ_TEMP_H
 
 /* Macros */
 #define TRUE 1
