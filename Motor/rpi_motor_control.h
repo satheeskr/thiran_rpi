@@ -5,8 +5,8 @@ Description:
 Header file for rpi_motor_control.c
 ==============================================*/
 
-#ifndef RPI_READ_TEMP_H
-#define RPI_READ_TEMP_H
+#ifndef RPI_MOTOR_CONTROL_H
+#define RPI_MOTOR_CONTROL_H
 
 /* Macros */
 #define TRUE 1
