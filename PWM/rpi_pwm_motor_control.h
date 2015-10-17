@@ -9,25 +9,25 @@ Header file for rpi_motor_control.c
 #define RPI_READ_TEMP_H
 
 /* Macros */
-#define TRUE 1
-#define FALSE 0
+#define TRUE 1u
+#define FALSE 0u
 
-#define PERIPHERAL_BASE (0x20000000)
-#define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
-#define SPI_BASE  (PERIPHERAL_BASE + 0x204000)
-#define PWM_BASE  (PERIPHERAL_BASE + 0x20C000)
-#define PWMCLK_BASE  (PERIPHERAL_BASE + 0x101000)
+#define PERIPHERAL_BASE (0x20000000u)
+#define GPIO_BASE (PERIPHERAL_BASE + 0x200000u)
+#define SPI_BASE  (PERIPHERAL_BASE + 0x204000u)
+#define PWM_BASE  (PERIPHERAL_BASE + 0x20C000u)
+#define PWMCLK_BASE  (PERIPHERAL_BASE + 0x101000u)
 
 /* Configure ports: a - port number, b - input, output or alt mode */
-#define INPORT(a)  *(gpio + a/10) &= ~(unsigned int)(7<<((a%10)*3))
-#define PORT_CONFIG(a,b) *(gpio + a/10) |= (unsigned int)(b<<((a%10)*3))
-#define SET_PORT(a) *(gpio + 7 + a/32) = (unsigned int)(1<<a)
-#define CLR_PORT(a) *(gpio + 10 + a/32) = (unsigned int)(1<<a)
+#define INPORT(a)  *(gpio + a/10u) &= ~(unsigned int)(7u<<((a%10)*3u))
+#define PORT_CONFIG(a,b) *(gpio + a/10u) |= (unsigned int)(b<<((a%10u)*3u))
+#define SET_PORT(a) *(gpio + 7u + a/32u) = (unsigned int)(1u<<a)
+#define CLR_PORT(a) *(gpio + 10u + a/32u) = (unsigned int)(1u<<a)
 
 /* SPI0 registers */
 #define SPI0_CS *spi
 #define SPI0_DATA *(spi + 1u)
-#define SPI0_CLK *(spi + 2)
+#define SPI0_CLK *(spi + 2u)
 
 /* PWM registers */
 #define PWM_CTL1 *pwm
@@ -44,7 +44,7 @@ Header file for rpi_motor_control.c
  is 0 to 1023 (2^10). The ADC reference voltage is 3.3V. 
  Hence scaling = Vref/range - 3.3V/1023
  */
-#define ADC_SCALING ((float)3.3f/1023u)
+#define ADC_SCALING ((float)0.0032258)
 
 /* AD conversion counts to be ignore for filtering noise */
 #define ADC_DIFFERENCE 4u
