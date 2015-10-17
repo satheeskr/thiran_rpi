@@ -111,7 +111,7 @@ PORT_CONFIG(18u, 2u);
 
 /* Configure PWM clock */
 /* Stop the PWM first before changing the clock */
-PWM_CTL1 = 0x00;
+PWM_CTL1 = 0x00u;
 usleep(10u);
 
 /* Stop the PWM clock; ENAB=0 */
@@ -144,25 +144,25 @@ Duty cycle 50% = 512/1024 * 585.9375Hz = 292.96875Hz or 0.85ms ON/OFF
 
 /* Configure PWM1, Enable, PWM mode, Polarity:0, Data register used
    Mark:Space used */
-PWM_CTL1 = 0x81;
-usleep(10);
+PWM_CTL1 = 0x81u;
+usleep(10u);
 
 /* Set period of the PWM output */
 PWM_RNG1 = 1024u; /* 75Hz; 1024 = 10 bit resolution */
-usleep(10);
+usleep(10u);
 
 	/* Run indefinitely */
 	while(1)
 	{
-		/* Check PWM is transmitting */
-		if ((PWM_STA1 & 0x100) == 0x100)
+		/* Check PWM is transmitting */		
+		if ((PWM_STA1 & 0x200u) == 0x200u)
 		{
 			/* Set duty cycle */
-			PWM_DAT1 = (pwm_demand * PWM_RNG1)/100;			
+			PWM_DAT1 = (pwm_demand * PWM_RNG1)/100u;	
 		}	
 		
 		/* 10ms sleep */	
-		usleep(10000);			
+		usleep(10000u);			
 	}
 }
 
@@ -193,7 +193,7 @@ spi_config();
 while(1)
 {
 	/* Transmit ADC read command and receive results */
-	thermistor_counts = spi_read_adc(0);
+	thermistor_counts = spi_read_adc(0u);
 
 	/* Ignore small change in counts */
 	if (abs(thermistor_counts_prev - 
@@ -219,7 +219,7 @@ while(1)
 	}	
 	
 	/* Look for temperature change and ramp slowly */
-	if (calc_diff(temp_ramp, temp) > 0.75)
+	if (calc_diff(temp_ramp, temp) > 0.75f)
 	{
 		temp_ramp = ramp_temperature(temp_ramp, temp);
 		print = TRUE;
@@ -233,30 +233,30 @@ while(1)
 		fprintf (stderr, "Temperature is: %4.2f degC\n", temp_ramp);
 		
 		/* Limit fan speed */
-		if ((temp_ramp/3) < 0)
+		if ((temp_ramp/3u) < 0u)
 		{
-			index = 0;
+			index = 0u;
 		}
-		else if ((temp_ramp/3) > 10)
+		else if ((temp_ramp/3u) > 10u)
 		{
-			index = 10;
+			index = 10u;
 		}
 		else
 		{
-			index = (temp_ramp/3);
+			index = (temp_ramp/3u);
 		}
 		
 		/* Update PWM demand for temperature change more than 2 degrees */
-		if (fabsf(temp_ramp - pwm_temp) >= 2.0)
+		if (fabsf(temp_ramp - pwm_temp) >= 2.0f)
 		{
 			pwm_temp = temp_ramp;
-			pwm_demand = fan_speed_dc[index - 1];
+			pwm_demand = fan_speed_dc[index - 1u];
 			fprintf(stderr, "pwm demand %d%\n", pwm_demand);
 		}
 	}
 	
 	/* Wait before next read */	
-	sleep(1);
+	sleep(1u);
 
 	/* Store previous temperature value */
 	prev_temp_ramp = temp_ramp;
@@ -273,14 +273,15 @@ duty cycle (On time = off time) depending on pwm demand
 void * blink(void * arg)
 {
 /* Configure GPIO17 as output port to control a LED */
+INPORT(17u);
 PORT_CONFIG(17u, 1u);
 
 while(1)
 {
-	SET_PORT(17);
-	usleep((100 - pwm_demand) * 5000); /* Sleep in microseconds */
-	CLR_PORT(17);
-	usleep((100 - pwm_demand) * 5000);
+	SET_PORT(17u);
+	usleep((100u - pwm_demand) * 5000u); /* Sleep in microseconds */
+	CLR_PORT(17u);
+	usleep((100u - pwm_demand) * 5000u);
 }
 }
 
@@ -303,23 +304,23 @@ int i;
 int result;
 
 /* Create threads */
-result = pthread_create(&threads[0], NULL, read_temp, NULL);
+result = pthread_create(&threads[0u], NULL, read_temp, NULL);
 
-if (0 != result)
+if (0u != result)
 {
 	printf("Thread cannot be created: %d\n", result);
 }
 
-result = pthread_create(&threads[1], NULL, motor_control, NULL);
+result = pthread_create(&threads[1u], NULL, motor_control, NULL);
 
-if (0 != result)
+if (0u != result)
 {
 	printf("Thread cannot be created: %d\n", result);
 }
 
 result = pthread_create(&threads[2], NULL, blink, NULL);
 
-if (0 != result)
+if (0u != result)
 {
 	printf("Thread cannot be created: %d\n", result);
 }
@@ -332,16 +333,16 @@ if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
 }
 
 /* Map peripheral memory for read/write access */
-gpio_map = mmap(NULL, 0x1000, PROT_READ|PROT_WRITE, MAP_SHARED, fp, GPIO_BASE); 
+gpio_map = mmap(NULL, 0x1000u, PROT_READ|PROT_WRITE, MAP_SHARED, fp, GPIO_BASE); 
 gpio = (volatile unsigned int *)gpio_map;
 
-spi_map = mmap(NULL, 0x1000, PROT_READ|PROT_WRITE, MAP_SHARED, fp, SPI_BASE); 
+spi_map = mmap(NULL, 0x1000u, PROT_READ|PROT_WRITE, MAP_SHARED, fp, SPI_BASE); 
 spi = (volatile unsigned int *)spi_map;
 
-pwm_map = mmap(NULL, 0x1000, PROT_READ|PROT_WRITE, MAP_SHARED, fp, PWM_BASE); 
+pwm_map = mmap(NULL, 0x1000u, PROT_READ|PROT_WRITE, MAP_SHARED, fp, PWM_BASE); 
 pwm = (volatile unsigned int *)pwm_map;
 
-pwmclk_map = mmap(NULL, 0x1000, PROT_READ|PROT_WRITE, MAP_SHARED, fp, PWMCLK_BASE); 
+pwmclk_map = mmap(NULL, 0x1000u, PROT_READ|PROT_WRITE, MAP_SHARED, fp, PWMCLK_BASE); 
 pwmclk = (volatile unsigned int *)pwmclk_map;
 
 if((MAP_FAILED == gpio_map) || 
@@ -357,11 +358,11 @@ if((MAP_FAILED == gpio_map) ||
 close(fp);
 
 /* Wait till threads complete */
-for (i = 0; i < NUM_THREADS; i++)
+for (i = 0u; i < NUM_THREADS; i++)
 {
 	result = pthread_join(threads[i], NULL);
 	
-	if (0 != result)
+	if (0u != result)
 	{
 		printf("Thread cannot be completed: %d\n", result);
 	}
@@ -393,20 +394,20 @@ float temp = temp_voltage_tab[0].temp;
 unsigned char tab_length = sizeof(temp_voltage_tab)/sizeof(temp_voltage_tab[0]);
 
 /* Limit the temperature to maximum value in the lookup table */
-if (temp_adc_v >= temp_voltage_tab[tab_length - 1].voltage)
+if (temp_adc_v >= temp_voltage_tab[tab_length - 1u].voltage)
 {
-	temp = temp_voltage_tab[tab_length - 1].temp;
+	temp = temp_voltage_tab[tab_length - 1u].temp;
 }
 else
 {
-	for (index = 0; index < tab_length; index++)
+	for (index = 0u; index < tab_length; index++)
 	{
 		/* Find lower and upper points in the table */
 		if ((temp_adc_v > temp_voltage_tab[index].voltage) &&
-			(temp_adc_v < temp_voltage_tab[index + 1].voltage))
+			(temp_adc_v < temp_voltage_tab[index + 1u].voltage))
 		{			
 			temp_low = temp_voltage_tab[index].temp;
-			temp_high = temp_voltage_tab[index + 1].temp;
+			temp_high = temp_voltage_tab[index + 1u].temp;
 			
 			/* y=mx + c */
 			temp = temp_voltage_tab[index].gradient * 
@@ -422,7 +423,7 @@ easy reading */
 /* Eg: 20.78 - 20; 0.78 > 0.5; 20 + 1 = 21 */
 /* Eg: 20.28 - 20; 0.28 < 0.5; 20 + 0.5 = 20.5 */
 temp_diff = (temp - (int)temp);	
-temp_diff = ((int)((temp_diff*100)/(TEMP_RES*100)) + 1) * TEMP_RES;			
+temp_diff = ((int)((temp_diff*100u)/(TEMP_RES*100u)) + 1u) * TEMP_RES;			
 temp = (int)temp + temp_diff;
 	
 return(temp);
