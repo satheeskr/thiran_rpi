@@ -104,11 +104,11 @@ control the fan speed.
 void * motor_control(void * arg)
 {	
 	while(1)
-	{
-		SET_PORT(18);
-		usleep(pwm_demand*500);
-		CLR_PORT(18);
-		usleep((100-pwm_demand)*500);
+	{		
+		SET_PORT(18u);
+		usleep(pwm_demand * 500u);
+		CLR_PORT(18u);
+		usleep((100 - pwm_demand) * 500u);
 	}
 }
 
@@ -367,9 +367,11 @@ This function configures the GPIO ports as SPI
 inline static void spi_config(void)
 {
 /* Configure GPIO17 as output port to control a LED */
+PORT_INPUT(17u);
 PORT_CONFIG(17u, 1u);
 
 /* Configure GPIO18 as output port to control a motor */
+PORT_INPUT(18u);
 PORT_CONFIG(18u, 1u);
 
 /* Configure GPIO ports as SPI mode ALT0 */
