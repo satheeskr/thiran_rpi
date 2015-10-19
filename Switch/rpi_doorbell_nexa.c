@@ -18,16 +18,12 @@ volatile unsigned int current_time = 0;
 #define OUTPORT(a) 		*(gpio + a/10) |= (unsigned int)(1<<((a%10)*3))
 #define SET_PORT(a) 		*(gpio + 7 + a/32) = (unsigned int)(1<<a)
 #define CLR_PORT(a) 		*(gpio + 10 + a/32) = (unsigned int)(1<<a)
-#define DETECT_EDGE(a)		(*(gpio + 16 + a/32)>>a)
-#define FALLING_EDGE(a)		*(gpio + 22 + a/32) = (unsigned int)(1<<a)
-#define EVENT_CLEAR(a) 		*(gpio + 16 + a/32) = (unsigned int)(1<<a)
-#define PIN_LEVEL(a) 		(*(gpio + 13 + a/32)>>a)
 
 #define PORT_NUM 23u
-#define PORT_IN_NUM 27u
-
-#define PULSE_SHORT_SOCK 350u
-#define PULSE_LONG_SOCK (PULSE_SHORT_SOCK * 3u)
+#define PULSE_SHORT 265u
+#define PULSE_LONG (PULSE_SHORT * 5u)
+#define PULSE_PREAMBLE (PULSE_SHORT * 10u)
+#define PULSE_LONG (PULSE_SHORT * 5u)
 
 #define PULSE_SHORT_BELL 280u
 #define PULSE_LONG_BELL (PULSE_SHORT_BELL * 2u)
@@ -49,39 +45,52 @@ inline DELAY_USECONDS(unsigned int delay)
    pulse is sent as 350us high pulse followed by (350us x 31)
    low pulse. This is repeated 10 times so that the receiver 
    catches at least one */
-void send_code_sock(unsigned char * bytecode)
+void send_code(unsigned char * bytecode)
 {
 int i;
 int x;
 for (x = 0; x < 10; x++)
 {
 	i = 0;
-
+	
+	/* Pre-amble */
+	SET_PORT(PORT_NUM);			
+	DELAY_USECONDS(PULSE_SHORT);
+	CLR_PORT(PORT_NUM);			
+	DELAY_USECONDS(PULSE_PREAMBLE);
 	while(bytecode[i] != '\0')
 	{		
 		/* Send bit 1 */
 		if('1' == bytecode[i])
 		{
 			SET_PORT(PORT_NUM);			
-			DELAY_USECONDS(PULSE_LONG_SOCK);
+			DELAY_USECONDS(PULSE_SHORT);
 			CLR_PORT(PORT_NUM);			
-			DELAY_USECONDS(PULSE_SHORT_SOCK);
+			DELAY_USECONDS(PULSE_LONG);
+			SET_PORT(PORT_NUM);			
+			DELAY_USECONDS(PULSE_SHORT);
+			CLR_PORT(PORT_NUM);			
+			DELAY_USECONDS(PULSE_SHORT);
 		}
 		else /* Send bit 0 */
 		{
-			SET_PORT(PORT_NUM);
-			DELAY_USECONDS(PULSE_SHORT_SOCK);						
+			SET_PORT(PORT_NUM);			
+			DELAY_USECONDS(PULSE_SHORT);
 			CLR_PORT(PORT_NUM);			
-			DELAY_USECONDS(PULSE_LONG_SOCK);						
+			DELAY_USECONDS(PULSE_SHORT);
+			SET_PORT(PORT_NUM);			
+			DELAY_USECONDS(PULSE_SHORT);
+			CLR_PORT(PORT_NUM);			
+			DELAY_USECONDS(PULSE_LONG);
 		}
 		i++;
 	}
 
-	/* Send Sync bits */
+	/* Post-amble bits */
 	SET_PORT(PORT_NUM);	
-	DELAY_USECONDS(PULSE_SHORT_SOCK);				
+	DELAY_USECONDS(PULSE_SHORT);				
 	CLR_PORT(PORT_NUM);
-	DELAY_USECONDS((PULSE_SHORT_SOCK * 36));			
+	DELAY_USECONDS((PULSE_SHORT * 38));			
 }
 }
 
@@ -135,10 +144,8 @@ int main(int argc, char *argv[])
 int fp, fp1;
 void * gpio_map;
 void * stm_base; 
-unsigned char * bytecode_sock;
-unsigned char * bytecode_bell;
+unsigned char * bytecode;
 volatile unsigned int cmd;
-static unsigned char toggle = 0u;
 
 if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
 {
@@ -170,39 +177,72 @@ close(fp1);
 /* Configure port 23 as output */
 INPORT(PORT_NUM);
 OUTPORT(PORT_NUM);
-
-/* Configure port 27 as input */
-INPORT(PORT_IN_NUM);
-FALLING_EDGE(PORT_IN_NUM);
-
-while(1)
-{
-sleep(1);
-if (DETECT_EDGE(PORT_IN_NUM) == 1u)
-{
-	EVENT_CLEAR(PORT_IN_NUM);
 	
-	if (0u == toggle)
+/* Print instructions if no input received */
+if (argc != 2)
+{
+	cmd = 255u;
+}
+else
+{
+	cmd = atoi(argv[1]);
+}
+
+if (cmd < 7)
+{
+	if (1 == cmd%2)
 	{
-		/* Switch 2 on */
-		bytecode_sock = "000000010101000001010101"; /* 0x015055 */
-		toggle = 1u;
+		fprintf(stderr, "Turning ON switch %d\n", (cmd + 1)/2);
+	}
+	else if (0 == cmd)
+	{
+		fprintf(stderr, "Turning OFF all switches\n");
 	}
 	else
 	{
-		/* Switch 1 off */
-		bytecode_sock = "000000010101000001010100"; /* 0x015054 */		
-		toggle = 0u;
+		fprintf(stderr, "Turning OFF switch %d\n", cmd/2);
 	}
-	
-	bytecode_bell = "100011111011"; /* 0x8FB */
-	
-	/* Transmit code to turn off/on the remote switch */
-	send_code_sock(bytecode_sock);
-	
-	/* Ding-dong */
-	send_code_bell(bytecode_bell);
+
 }
+
+switch(cmd)
+{
+case 1: /* Switch 1 on */
+	bytecode = "00101110110001011011101110010000"; /* 0x2EC5BB90 */	
+	break;
+case 2: /* Switch 1 off */
+	bytecode = "00101110110001011011101110000000"; /* 0x2EC5BB80 */
+	break;
+case 3: /* Switch 2 on */
+	bytecode = "00101110110001011011101110010001"; /* 0x2EC5BB91 */
+	break;
+case 4: /* Switch 2 off */
+	bytecode = "00101110110001011011101110000001"; /* 0x2EC5BB81 */
+	break;
+case 5: /* Switch 3 on */
+	bytecode = "00101110110001011011101110010010"; /* 0x2EC5BB92 */
+	break;
+case 6: /* Switch 3 off */
+	bytecode = "00101110110001011011101110000010"; /* 0x2EC5BB82 */
+	break;
+case 0: /* All Switches off */
+	bytecode = "00101110110001011011101110100000"; /* 0x2EC5BBA0 */
+	break;
+default:
+	printf("Enter 1 to turn ON switch 1\n");
+	printf("Enter 2 to turn OFF switch 1\n");
+	printf("Enter 3 to turn ON switch 2\n");
+	printf("Enter 4 to turn OFF switch 2\n");
+	printf("Enter 5 to turn ON switch 3\n");
+	printf("Enter 6 to turn OFF switch 3\n");
+	printf("Enter 0 to turn OFF all switches\n");							
+	break;	
 }
+
+/* Transmit code to turn off/on the remote switch */
+send_code(bytecode);
+
+/* Ding-dong */
+send_code_bell("011100000100");
 INPORT(PORT_NUM);
 }
