@@ -195,7 +195,7 @@ if (DETECT_EDGE(PORT_IN_NUM) == 1u)
 		toggle = 0u;
 	}
 	
-	bytecode_bell = "100011111011"; /* 0x8FB */
+	bytecode_bell = "011100000100"; /* 0x8FB */
 	
 	/* Transmit code to turn off/on the remote switch */
 	send_code_sock(bytecode_sock);

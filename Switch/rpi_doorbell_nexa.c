@@ -243,6 +243,6 @@ default:
 send_code(bytecode);
 
 /* Ding-dong */
-send_code_bell("011100000100");
+//send_code_bell("011100000100");
 INPORT(PORT_NUM);
 }
