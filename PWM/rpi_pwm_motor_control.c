@@ -85,7 +85,7 @@ const temp_voltage_t temp_voltage_tab[] =
 };
 
 unsigned int fan_speed_dc[10u] = {0, 15, 20, 25, 30, 35, 35, 45, 55, 60};
-static unsigned char pwm_demand = 0u;
+static unsigned char pwm_demand = 60u;
 
 /* Function declarations */
 static float get_temperature(float temp_adc_v);
@@ -303,28 +303,6 @@ pthread_t threads[NUM_THREADS];
 int i;
 int result;
 
-/* Create threads */
-result = pthread_create(&threads[0u], NULL, read_temp, NULL);
-
-if (0u != result)
-{
-	printf("Thread cannot be created: %d\n", result);
-}
-
-result = pthread_create(&threads[1u], NULL, motor_control, NULL);
-
-if (0u != result)
-{
-	printf("Thread cannot be created: %d\n", result);
-}
-
-result = pthread_create(&threads[2], NULL, blink, NULL);
-
-if (0u != result)
-{
-	printf("Thread cannot be created: %d\n", result);
-}
-
 /* Open the mem device file for writing */
 if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
 {
@@ -357,6 +335,28 @@ if((MAP_FAILED == gpio_map) ||
 /* Close the mem file */
 close(fp);
 
+/* Create threads */
+result = pthread_create(&threads[0u], NULL, read_temp, NULL);
+
+if (0u != result)
+{
+	printf("Thread cannot be created: %d\n", result);
+}
+
+result = pthread_create(&threads[1u], NULL, motor_control, NULL);
+
+if (0u != result)
+{
+	printf("Thread cannot be created: %d\n", result);
+}
+
+result = pthread_create(&threads[2], NULL, blink, NULL);
+
+if (0u != result)
+{
+	printf("Thread cannot be created: %d\n", result);
+}
+
 /* Wait till threads complete */
 for (i = 0u; i < NUM_THREADS; i++)
 {
@@ -367,7 +367,6 @@ for (i = 0u; i < NUM_THREADS; i++)
 		printf("Thread cannot be completed: %d\n", result);
 	}
 }
-
 printf("Threads started successfully");
 }
 
@@ -449,6 +448,7 @@ ABP frequency = 250MHz
 CDIV = 16384
 SPI speed = 15.25kHz
  */
+
 SPI0_CLK = 16384u;
 }
 

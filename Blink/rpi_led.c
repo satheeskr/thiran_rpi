@@ -14,7 +14,7 @@ LED.
 #include "unistd.h"
 
 /* Pre-processor defines */
-#define PERIPHERAL_BASE (0x20000000)
+#define PERIPHERAL_BASE (0x3F000000)
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
 #define INPORT(a)  *(gpio + a/10) &= ~(unsigned int)(7<<((a%10)*3))
 #define OUTPORT(a) *(gpio + a/10) |= (unsigned int)(1<<((a%10)*3))
@@ -94,6 +94,7 @@ while((input = getchar()) != 'q')
 }
 
 /* Configure port 17 as input to turn off outputs safely */
+CLR_PORT(17);
 INPORT(17);
 }
 
