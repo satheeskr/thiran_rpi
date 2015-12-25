@@ -40,5 +40,5 @@ Header file for rpi_pwm_xmas_lights.c
 #define PWM_CLK_DIV *(pwmclk + 41u)
 
 /* extern declarations */
-void pwm_wave_gen(unsigned char pwm_enable);
+void pwm_wave_gen(unsigned int pwm_enable);
 #endif

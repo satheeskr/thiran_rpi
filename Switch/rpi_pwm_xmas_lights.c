@@ -32,75 +32,92 @@ Description:
 This thread outputs the PWM duty cycle through the GPIO to
 generate square wave. 
 *=========================================================*/
-void pwm_wave_gen(unsigned char pwm_enable)
+void pwm_wave_gen(unsigned int pwm_enable)
 {	
-unsigned int i = 0;
-
-/* Stop the PWM */
-if (0u == pwm_enable)
-{
-	/* Stop the PWM; ENAB=0 */
-	PWM_CTL1 = 0x80u;
-	usleep(10u);
-	
-	/* Tri state output port */
-	INPORT(18u);
-	sleep(1);
-}
-else
-{
-/* Configure GPIO18 as PWM1 output (ALT 5) to generate square wave */
-INPORT(18u);
-PORT_CONFIG(18u, 2u);
-
-/* Configure PWM clock */
-/* Stop the PWM first before changing the clock */
-PWM_CTL1 = 0x00u;
-usleep(10u);
-
-/* Stop the PWM clock; ENAB=0 */
-PWM_CLK_CTL = 0x5A000001u;
-usleep(110u);
-
-/* Wait till busy flag is cleared */
-while ((PWM_CLK_CTL & 0x80u) != 0u);
-
-/* Set the clock divider */
-PWM_CLK_DIV = (0x5A000000u) | (19200u << 12u);
-usleep(10u);
-
-/* Wait till busy flag is cleared */
-while ((PWM_CLK_CTL & 0x80u) != 0u);
-usleep(10u);
-
-/* Start the clock; ENAB=1 */
-PWM_CLK_CTL = 0x5A000011u;
-usleep(10u);
-
-/*
-Example:
-PWM Base Clock Frequency = 19.2 MHz, Clock Divider = 19200,
-Range = 1024. Hence PWM clock = 19.2MHz/19200 = 1kHz or 1ms;
-PWM period: 1kHz/1024 = 0.9765Hz or 1.024s
-PWM duty cycle = 50% = 1.953125Hz  or 0.512s ON/OFF 
-*/
-
-/* Configure PWM1, Enable, PWM mode, Polarity:0, Data register used
-   Mark:Space used */
-PWM_CTL1 = 0x81u;
-usleep(10u);
-
-/* Set period of the PWM output */
-PWM_RNG1 = pwm_enable * 256; /* 0.9765Hz; 1024 = 10 bit resolution */
-usleep(10u);
-
-/* Check PWM is transmitting */		
-if ((PWM_STA1 & 0x200u) == 0x200u)
-{
-	/* Set duty cycle */
-	PWM_DAT1 = PWM_RNG1/2;	
-}
-}
+unsigned char i = 0;
+unsigned char j = 0;
+	/* Stop the PWM */
+	if (0u == pwm_enable)
+	{
+		/* Stop the PWM; ENAB=0 */
+		PWM_CTL1 = 0x80u;
+		usleep(10u);
+		
+		/* Tri state output port */
+		INPORT(18u);
+	}
+	else
+	{
+		/* Configure GPIO18 as PWM1 output (ALT 5) to generate square wave */
+		INPORT(18u);
+		PORT_CONFIG(18u, 2u);
+		
+		/* Configure PWM clock */
+		/* Stop the PWM first before changing the clock */
+		PWM_CTL1 = 0x00u;
+		usleep(10u);
+		
+		/* Stop the PWM clock; ENAB=0 */
+		PWM_CLK_CTL = 0x5A000001u;
+		usleep(110u);
+		
+		/* Wait till busy flag is cleared */
+		while ((PWM_CLK_CTL & 0x80u) != 0u);
+		
+		/* Set the clock divider */
+		PWM_CLK_DIV = (0x5A000000u) | (192u << 12u);
+		usleep(10u);
+		
+		/* Wait till busy flag is cleared */
+		while ((PWM_CLK_CTL & 0x80u) != 0u);
+		usleep(10u);
+		
+		/* Start the clock; ENAB=1 */
+		PWM_CLK_CTL = 0x5A000011u;
+		usleep(10u);
+		
+		/*
+		Example:
+		PWM Base Clock Frequency = 19.2 MHz, Clock Divider = 19200,
+		Range = 1024. Hence PWM clock = 19.2MHz/19200 = 1kHz or 1ms;
+		PWM period: 1kHz/1024 = 0.9765Hz or 1.024s
+		PWM duty cycle = 50% = 1.953125Hz  or 0.512s ON/OFF 
+		*/
+		
+		/* Configure PWM1, Enable, PWM mode, Polarity:0, Data register used
+		   Mark:Space used */
+		PWM_CTL1 = 0x81u;
+		usleep(10u);
+				
+		if (100u == pwm_enable)		
+		{
+		PWM_RNG1 = 1024u;
+		usleep(10u);
+		
+		for (i = 0; i < 20; i++)
+		{
+		for (j = 0; j < 10; j++)
+		/* Check PWM is transmitting */		
+		//if ((PWM_STA1 & 0x200u) == 0x200u)
+		{
+			/* Set duty cycle */
+			PWM_DAT1 = PWM_RNG1 * j * 0.1;
+			usleep(200000);
+		}	
+		sleep(1);
+		}
+		}
+		else
+		{
+			/* Set period of the PWM output */
+			PWM_RNG1 = pwm_enable * 512u; /* 0.9765Hz; 1024 = 10 bit resolution */
+			usleep(10u);
+		
+			/* Set duty cycle */
+			PWM_DAT1 = PWM_RNG1/2;
+			usleep(10u);
+		}
+	}
 }
 
 /*========================================================= 
@@ -117,7 +134,7 @@ void * spi_map; /* Pointer to SPI0 memory */
 void * pwm_map; /* Pointer to PWM1 memory */
 void * pwmclk_map; /* Pointer to PWM_CLK memory */
 
-unsigned char pwm_enable = 0u;
+unsigned int pwm_enable = 0u;
 
 /* Open the mem device file for writing */
 if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
