@@ -25,16 +25,20 @@ volatile unsigned int current_time = 0;
 #define PIN_LEVEL(a) 		(*(gpio + 13 + a/32)>>a)
 
 #define PORT_NUM 23u
-#define PULSE_SHORT_BELL 280u
+#define PULSE_SHORT_BELL 1040u
 #define PULSE_LONG_BELL (PULSE_SHORT_BELL * 2u)
-#define PULSE_INTERFRAME_GAP_MIN 9900
-#define PULSE_INTERFRAME_GAP_MAX 9920
-#define TOLERANCE 20 /* percent */
+#define PULSE_INTERFRAME_GAP_MIN 23900
+#define PULSE_INTERFRAME_GAP_MAX 24000
+#define TOLERANCE 10 /* percent */
 #define PULSE_SHORT_BELL_MIN (PULSE_SHORT_BELL - (PULSE_SHORT_BELL * TOLERANCE)/100)
 #define PULSE_SHORT_BELL_MAX (PULSE_SHORT_BELL + (PULSE_SHORT_BELL * TOLERANCE)/100)
 #define PULSE_LONG_BELL_MIN (PULSE_LONG_BELL - (PULSE_LONG_BELL * TOLERANCE)/100)
 #define PULSE_LONG_BELL_MAX (PULSE_LONG_BELL + (PULSE_LONG_BELL * TOLERANCE)/100)
-#define MAX_PULSE_COUNT 30
+#define PULSE_START_MIN 1275
+#define PULSE_START_MAX 1375
+
+#define MAX_PULSE_COUNT 129
+
 inline DELAY_USECONDS(unsigned int delay)
 {
 	start_time = *(volatile unsigned int *)(stm + 1);
@@ -46,12 +50,11 @@ inline DELAY_USECONDS(unsigned int delay)
 }
 
 /* This function receives the binary code 0 and 1 from the wireless
-   bell switch. 0 is sent as a 280us low pulse folowed by 560us high 
-   pulse. 1 is sent as a 560us low pulse followed by 280us 
+   bell switch. 0 is sent as a 1045ms low pulse folowed by 2090ms high 
+   pulse. 1 is sent as a 2090ms low pulse followed by 1045ms 
    high pulse. Sync pulse is sent between the byte codes. Sync 
-   pulse is sent as a 10ms (280us x 36) low pulse.
-   This is repeated 10 times so that the receiver 
-   catches at least one */
+   pulse is sent as a 24ms low pulse. Start pulse is 1300ms high pulse.
+   This is repeated 2 times so that the receiver catches at least one. */
 int main(int argc, char *argv[])
 {
 int fp, fp1;
@@ -107,30 +110,38 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 	pulse_duration = curr_time - prev_time;
     	if ((pulse_duration > PULSE_INTERFRAME_GAP_MIN) && 
 		(pulse_duration < PULSE_INTERFRAME_GAP_MAX) &&
-		(0 == start_detected))
+		(0 == start_detected) && (0 == counter))
 	{
-		counter++;
- 		if (counter == 3)
+		counter = 1;
+	}
+	else if (1 == counter)
+	{
+ 		if ((pulse_duration > PULSE_START_MIN) &&
+			(pulse_duration < PULSE_START_MAX))
 		{
 			start_detected = 1;
 			counter = 0;
 		}
 	}
-	
+	else
+	{
+		/* Ignore the pulse */
+	}
+
 	if (start_detected == 1)
         {
 		pls_dur[pulse_count++] = pulse_duration;
 
 		if (pulse_count == MAX_PULSE_COUNT)
 		{
+			unsigned char i;
+			unsigned long code[4] = {0};
+
 			pulse_count = 0;
 			start_detected = 0;
-			unsigned char i;
-			unsigned short code = 0;
-
-			for( i = 2; i < MAX_PULSE_COUNT; i+=2)
+			for( i = 1; i < MAX_PULSE_COUNT; i+=2)
 			{
-				code <<= 1;
+				code[i / 32] <<= 1;
 
 				if ((pls_dur[i] > PULSE_SHORT_BELL_MIN) && 
 					(pls_dur[i] < PULSE_SHORT_BELL_MAX) && 
@@ -144,44 +155,50 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 						(pls_dur[i] > PULSE_LONG_BELL_MIN) && 
 						(pls_dur[i] < PULSE_LONG_BELL_MAX))		
 				{
-					code |= 1;
+					code[i / 32] |= 1;
 				}
 				else
 				{
-					if (pls_dur[i] > PULSE_INTERFRAME_GAP_MIN)
-					{
-						code >>= 1;
-						break;
-					}
+					/* Incorrect pulse, reset code */
+					code[0] = 0;
+					code[1] = 0;
+					code[2] = 0;
+					code[3] = 0;
+					break;
 				}
 			}
-
-			printf("code received is %0x\n", code);
+							
+			//printf("code received is %0x %0x %0x %0x\n", code[0], code [1], code[2], code[3]);
 		
-			if (0x704 == code)
+			unsigned char code_matched = 0;
+			if ((code[1] == 0xF8DA) && (code[2] == 0x1831))
 			{
-				//unsigned int result = system("sudo -u pi ssh -lpi 192.168.1.18 sudo pidof mplayer");
-				//printf("result is %d\n", result);
-	    			
-				//toggle = (result == 256)?1:0;
-
-				if (toggle)
-	    			{
-	    				//system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/nexa 5");
-	    				system("sudo -u pi ssh -lpi 192.168.1.18 sudo -u pi /home/pi/fmradio.sh &");
-					toggle = 0;
-					SET_PORT(7u);
-	    			}
-	    			else
-	    			{
-	    				//system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/nexa 6");
-					system("sudo -u pi ssh -lpi 192.168.1.18 sudo pkill mplayer &");
-					toggle = 1;
-					CLR_PORT(7u);
-	    			}
+				printf("PIR 1 detected\n");
+				code_matched = 1;
 			}
+			else if ((code[1] == 0x6416) && (code[2] == 0x042C))
+			{
+				printf("PIR 2 detected\n");
+				code_matched = 1;
+			}
+			else
+			{
+				code_matched = 0;
+			}
+			
+			if (1 == code_matched)
+			{
+				code_matched = 0;
 
-			sleep(2);
+				/* Reset code */
+				code[0] = 0;
+				code[1] = 0;
+				code[2] = 0;
+				code[3] = 0;
+
+				system("/home/pi/webcam.sh");
+				sleep(30);
+			}
 		}
         }	
 }
