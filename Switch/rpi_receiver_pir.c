@@ -63,7 +63,7 @@ void * stm_base;
 unsigned int pulse_duration;
 unsigned int curr_time = 0;
 unsigned int prev_time = 0;
-unsigned char counter = 0;
+unsigned char inter_frame_gap = 0;
 unsigned char toggle = 1;
 unsigned char pulse_count = 0;
 unsigned char start_detected = 0;
@@ -110,22 +110,24 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 	pulse_duration = curr_time - prev_time;
     	if ((pulse_duration > PULSE_INTERFRAME_GAP_MIN) && 
 		(pulse_duration < PULSE_INTERFRAME_GAP_MAX) &&
-		(0 == start_detected) && (0 == counter))
+		(0 == start_detected) && (0 == inter_frame_gap))
 	{
-		counter = 1;
+		inter_frame_gap = 1;
 	}
-	else if (1 == counter)
+	else if (1 == inter_frame_gap)
 	{
+		inter_frame_gap = 0;
+
  		if ((pulse_duration > PULSE_START_MIN) &&
 			(pulse_duration < PULSE_START_MAX))
 		{
 			start_detected = 1;
-			counter = 0;
 		}
 	}
 	else
 	{
 		/* Ignore the pulse */
+		inter_frame_gap = 0;
 	}
 
 	if (start_detected == 1)
@@ -135,7 +137,8 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 		if (pulse_count == MAX_PULSE_COUNT)
 		{
 			unsigned char i;
-			unsigned long code[4] = {0};
+			unsigned short code[4] = {0};
+			unsigned short prev_code[2][4] = {0};
 
 			pulse_count = 0;
 			start_detected = 0;
@@ -171,33 +174,54 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			//printf("code received is %0x %0x %0x %0x\n", code[0], code [1], code[2], code[3]);
 		
 			unsigned char code_matched = 0;
-			if ((code[1] == 0xF8DA) && (code[2] == 0x1831))
+			if ((code[1] == 0xF8DA) && (code[2] == 0x1831) && ((code[3] & 0xFF00) == 0x2200))
 			{
-				printf("PIR 1 detected\n");
+				//printf("PIR 1 detected\n");
 				code_matched = 1;
 			}
-			else if ((code[1] == 0x6416) && (code[2] == 0x042C))
+			else if ((code[1] == 0x6416) && (code[2] == 0x042C) && ((code[3] & 0xFF00) == 0x2200))
 			{
-				printf("PIR 2 detected\n");
-				code_matched = 1;
+				//printf("PIR 2 detected\n");
+				code_matched = 2;
 			}
 			else
 			{
 				code_matched = 0;
 			}
 			
-			if (1 == code_matched)
+			if (0 != code_matched)
 			{
-				code_matched = 0;
+				unsigned char cmd[100];
+
+				if ((code[0] & 0xFF) != (prev_code[code_matched - 1][0] & 0xFF))
+				{
+					sprintf(cmd,"%s %0x %0x %0x %0x %d", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], code_matched);
+
+					if (1 == code_matched)
+					{
+						system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_zone1.sh &");
+					}
+
+					if (2 == code_matched)
+					{
+						system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_zone2.sh &");
+					}
+					system(cmd);
+				}
+
+				prev_code[code_matched - 1][0] = code[0];
+				prev_code[code_matched - 1][1] = code[1];
+				prev_code[code_matched - 1][2] = code[2];
+				prev_code[code_matched - 1][3] = code[3];
 
 				/* Reset code */
 				code[0] = 0;
 				code[1] = 0;
 				code[2] = 0;
 				code[3] = 0;
+				code_matched = 0;
 
-				system("/home/pi/webcam.sh");
-				sleep(30);
+				sleep(2);
 			}
 		}
         }	
