@@ -40,25 +40,10 @@ volatile unsigned int current_time = 0;
 #define PULSE_START_PIR_MAX (PULSE_START_PIR + (PULSE_START_PIR * TOLERANCE_PIR)/100)
 #define MAX_PULSE_COUNT_PIR 129u
 
-#define TOLERANCE_NEXA 35u /* percent */
-#define PULSE_SHORT_NEXA 265u
-#define PULSE_LONG_NEXA (PULSE_SHORT_NEXA * 5u)
-#define PULSE_IF_GAP_NEXA_MIN 10000u
-#define PULSE_IF_GAP_NEXA_MAX 10300u
-#define PULSE_SHORT_NEXA_MIN (PULSE_SHORT_NEXA - (PULSE_SHORT_NEXA * TOLERANCE_NEXA)/100)
-#define PULSE_SHORT_NEXA_MAX (PULSE_SHORT_NEXA + (PULSE_SHORT_NEXA * TOLERANCE_NEXA)/100)
-#define PULSE_LONG_NEXA_MIN (PULSE_LONG_NEXA - (PULSE_LONG_NEXA * TOLERANCE_NEXA)/100)
-#define PULSE_LONG_NEXA_MAX (PULSE_LONG_NEXA + (PULSE_LONG_NEXA * TOLERANCE_NEXA)/100)
-#define PULSE_START_NEXA 265u
-#define PULSE_START_NEXA_MIN (PULSE_START_NEXA - (PULSE_START_NEXA * 10)/100)
-#define PULSE_START_NEXA_MAX (PULSE_START_NEXA + (PULSE_START_NEXA * 10)/100)
-#define MAX_PULSE_COUNT_NEXA 130
-#define NEXA 2
-
 #define TOLERANCE_BELL 20u /* percent */
 #define PULSE_SHORT_BELL 280u
 #define PULSE_LONG_BELL (PULSE_SHORT_BELL * 2u)
-#define PULSE_IF_GAP_BELL 10000u
+#define PULSE_IF_GAP_BELL (PULSE_SHORT_BELL * 36)
 #define PULSE_IF_GAP_BELL_MIN (PULSE_IF_GAP_BELL - (PULSE_IF_GAP_BELL * 1)/100)
 #define PULSE_IF_GAP_BELL_MAX (PULSE_IF_GAP_BELL + (PULSE_IF_GAP_BELL * 1)/100)
 #define PULSE_SHORT_BELL_MIN (PULSE_SHORT_BELL - (PULSE_SHORT_BELL * TOLERANCE_BELL)/100)
@@ -70,7 +55,43 @@ volatile unsigned int current_time = 0;
 #define PULSE_START_BELL_MAX (PULSE_START_BELL + (PULSE_START_BELL * TOLERANCE_BELL)/100)
 #define MAX_PULSE_COUNT_BELL 25u
 
-#define MAX_PROTOCOL	3u
+#define TOLERANCE_BYRON 20u /* percent */
+#define PULSE_SHORT_BYRON 330u
+#define PULSE_LONG_BYRON (PULSE_SHORT_BYRON * 2u)
+#define PULSE_IF_GAP_BYRON (PULSE_SHORT_BYRON * 36u)
+#define PULSE_IF_GAP_BYRON_MIN (PULSE_IF_GAP_BYRON - (PULSE_IF_GAP_BYRON * 10)/100)
+#define PULSE_IF_GAP_BYRON_MAX (PULSE_IF_GAP_BYRON + (PULSE_IF_GAP_BYRON * 10)/100)
+#define PULSE_SHORT_BYRON_MIN (PULSE_SHORT_BYRON - (PULSE_SHORT_BYRON * TOLERANCE_BELL)/100)
+#define PULSE_SHORT_BYRON_MAX (PULSE_SHORT_BYRON + (PULSE_SHORT_BYRON * TOLERANCE_BELL)/100)
+#define PULSE_LONG_BYRON_MIN (PULSE_LONG_BYRON - (PULSE_LONG_BYRON * TOLERANCE_BELL)/100)
+#define PULSE_LONG_BYRON_MAX (PULSE_LONG_BYRON + (PULSE_LONG_BYRON * TOLERANCE_BELL)/100)
+#define PULSE_START_BYRON 330u
+#define PULSE_START_BYRON_MIN (PULSE_START_BYRON - (PULSE_START_BYRON * TOLERANCE_BYRON)/100)
+#define PULSE_START_BYRON_MAX (PULSE_START_BYRON + (PULSE_START_BYRON * TOLERANCE_BYRON)/100)
+#define MAX_PULSE_COUNT_BYRON 25u
+
+#define TOLERANCE_NEXA 40u /* percent */
+#define PULSE_SHORT_NEXA 265u
+#define PULSE_LONG_NEXA (PULSE_SHORT_NEXA * 5u)
+#define PULSE_IF_GAP_NEXA (PULSE_SHORT_NEXA * 37)
+#define PULSE_IF_GAP_NEXA_MIN (PULSE_IF_GAP_NEXA - (PULSE_IF_GAP_NEXA * 10)/100)
+#define PULSE_IF_GAP_NEXA_MAX (PULSE_IF_GAP_NEXA + (PULSE_IF_GAP_NEXA * 10)/100)
+#define PULSE_SHORT_NEXA_MIN (PULSE_SHORT_NEXA - (PULSE_SHORT_NEXA * TOLERANCE_NEXA)/100)
+#define PULSE_SHORT_NEXA_MAX (PULSE_SHORT_NEXA + (PULSE_SHORT_NEXA * TOLERANCE_NEXA)/100)
+#define PULSE_LONG_NEXA_MIN (PULSE_LONG_NEXA - (PULSE_LONG_NEXA * TOLERANCE_NEXA)/100)
+#define PULSE_LONG_NEXA_MAX (PULSE_LONG_NEXA + (PULSE_LONG_NEXA * TOLERANCE_NEXA)/100)
+#define PULSE_START_NEXA 265u
+#define PULSE_START_NEXA_MIN (PULSE_START_NEXA - (PULSE_START_NEXA * 10)/100)
+#define PULSE_START_NEXA_MAX (PULSE_START_NEXA + (PULSE_START_NEXA * 10)/100)
+#define MAX_PULSE_COUNT_NEXA 130
+
+#define MAX_PROTOCOL	4u
+
+#define PIR 	0
+#define BELL 	1
+#define BYRON 	2
+#define NEXA 	3
+
 
 typedef struct
 {
@@ -89,6 +110,7 @@ const pulse_t protocol_table[MAX_PROTOCOL] =
 {
 	{ PULSE_START_PIR_MIN, PULSE_START_PIR_MAX, PULSE_SHORT_PIR_MIN, PULSE_SHORT_PIR_MAX, PULSE_LONG_PIR_MIN, PULSE_LONG_PIR_MAX, PULSE_IF_GAP_PIR_MIN, PULSE_IF_GAP_PIR_MAX, MAX_PULSE_COUNT_PIR},
 	{ PULSE_START_BELL_MIN, PULSE_START_BELL_MAX, PULSE_SHORT_BELL_MIN, PULSE_SHORT_BELL_MAX, PULSE_LONG_BELL_MIN, PULSE_LONG_BELL_MAX, PULSE_IF_GAP_BELL_MIN, PULSE_IF_GAP_BELL_MAX, MAX_PULSE_COUNT_BELL},
+	{ PULSE_START_BYRON_MIN, PULSE_START_BYRON_MAX, PULSE_SHORT_BYRON_MIN, PULSE_SHORT_BYRON_MAX, PULSE_LONG_BYRON_MIN, PULSE_LONG_BYRON_MAX, PULSE_IF_GAP_BYRON_MIN, PULSE_IF_GAP_BYRON_MAX, MAX_PULSE_COUNT_BYRON},
 	{ PULSE_START_NEXA_MIN, PULSE_START_NEXA_MAX, PULSE_SHORT_NEXA_MIN, PULSE_SHORT_NEXA_MAX, PULSE_LONG_NEXA_MIN, PULSE_LONG_NEXA_MAX, PULSE_IF_GAP_NEXA_MIN, PULSE_IF_GAP_NEXA_MAX, MAX_PULSE_COUNT_NEXA},
 };
 
@@ -102,12 +124,6 @@ inline DELAY_USECONDS(unsigned int delay)
 	}
 }
 
-/* This function receives the binary code 0 and 1 from the wireless
-   pir/bell switch. 0 is sent as a 1045ms low pulse folowed by 2090ms high 
-   pulse. 1 is sent as a 2090ms low pulse followed by 1045ms 
-   high pulse. Sync pulse is sent between the byte codes. Sync 
-   pulse is sent as a 24ms low pulse. Start pulse is 1300ms high pulse.
-   This is repeated 2 times so that the receiver catches at least one. */
 int main(int argc, char *argv[])
 {
 int fp, fp1;
@@ -121,6 +137,7 @@ unsigned char toggle = 1;
 unsigned char pulse_count = 0;
 unsigned char start_detected = 0;
 unsigned int pls_dur[255];
+unsigned char cmd[100];
 
 if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
 {
@@ -164,7 +181,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 	unsigned char protocol;
 	unsigned short i;
 	unsigned short code[4] = {0};
-	unsigned short prev_code[2][4] = {0};
+	unsigned short prev_code[3][4] = {0};
 
 	/* Detect long inter-frame gap and the start bit to identify the real message */
 	if ((0 == start_detected) && (0 == inter_frame_gap))
@@ -201,14 +218,15 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 
 		if(pulse_count == protocol_table[protocol].max_bits)
 		{
+		start_detected = 0;
+
 		if (NEXA > protocol)
 		{
 			pulse_count = 0;
-			start_detected = 0;
 			for( i = 1; i < protocol_table[protocol].max_bits; i+=2)
 			{
 				code[i / 32] <<= 1;
-				printf("pulse duration %d %d\n", pls_dur[i], pls_dur[i+1]);
+				//printf("pulse duration %d %d\n", pls_dur[i], pls_dur[i+1]);
 				if ((pls_dur[i] > protocol_table[protocol].short_min) && 
 					(pls_dur[i] < protocol_table[protocol].short_max) && 
 					(pls_dur[i+1] > protocol_table[protocol].long_min) && 
@@ -230,11 +248,23 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					code[1] = 0;
 					code[2] = 0;
 					code[3] = 0;
+					
+					for (i = 0; i < 255; i++)
+					{
+						pls_dur[i] = 0;
+					}
 					break;
 				}
 			}
-							
-			if (0 == protocol)
+
+			/* This function receives the binary code 0 and 1 from the wireless
+			   pir/bell switch. 0 is sent as a 1045ms low pulse folowed by 2090ms high 
+			   pulse. 1 is sent as a 2090ms low pulse followed by 1045ms 
+			   high pulse. Sync pulse is sent between the byte codes. Sync 
+			   pulse is sent as a 24ms low pulse. Start pulse is 1300ms high pulse.
+			   This is repeated 2 times so that the receiver catches at least one. */
+
+			if (PIR == protocol)
 			{
 				unsigned char code_matched = 0;
 				if ((code[1] == 0xF8DA) && (code[2] == 0x1831) && ((code[3] & 0xFF00) == 0x2200))
@@ -251,14 +281,12 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 				{
 					code_matched = 0;
 				}
-			
+
 				if (0 != code_matched)
 				{
-					unsigned char cmd[100];
-
 					if ((code[0] & 0xFF) != (prev_code[code_matched - 1][0] & 0xFF))
 					{
-						sprintf(cmd,"%s %0x %0x %0x %0x %d", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], code_matched);
+						sprintf(cmd,"%s %0x %0x %0x %0x %d", "/home/pi/webcam.sh &", code[0], code[1], code[2], code[3], code_matched);
 
 						if (1 == code_matched)
 						{
@@ -278,30 +306,42 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					prev_code[code_matched - 1][3] = code[3];
 
 					/* Reset code */
-					code[0] = 0;
-					code[1] = 0;
-					code[2] = 0;
-					code[3] = 0;
 					code_matched = 0;
 				}
 			}
 
-			if ((1 == protocol) && (0x704 == code[0]))
+			if ((BELL == protocol) && (0x704 == code[0]))
 			{
-				code[0] = 0;
-				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_zone1.sh &");
+				if (toggle)
+				{
+					toggle = 0;
+					system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/fmradio.sh &");
+				}
+				else
+				{
+					toggle = 1;
+					system("sudo -u pi ssh -lpi 192.168.1.18 sudo pkill mplayer &");
+				}
+			}
+
+			if ((BYRON == protocol) && (0xB2C == code[0]))
+			{
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/rf/www/nexa 3");
+				sprintf(cmd,"%s %0x %0x %0x %0x %d", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 4);
+				system(cmd);
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/rf/www/nexa 4");
 			}
 		}
 		else
 		{ 
-		//if ((pls_dur[1] > 2500) && (pls_dur[1] < 2800))
+		if ((pls_dur[1] > 2300) && (pls_dur[1] < 2900))
 		{
 			pulse_count = 0;
-			start_detected = 0;
+//			printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
 			for( i = 2; i < protocol_table[protocol].max_bits; i+=4)
 			{
 				code[i / 64] <<= 1;
-				printf("pulse duration %d %d %d %d\n", pls_dur[i], pls_dur[i+1], pls_dur[i+2], pls_dur[i+3]);
+//				printf("pulse duration %d %d %d %d\n", pls_dur[i], pls_dur[i+1], pls_dur[i+2], pls_dur[i+3]);
 				if ((pls_dur[i] > protocol_table[protocol].short_min) && 
 					(pls_dur[i] < protocol_table[protocol].short_max) && 
 					(pls_dur[i+1] > protocol_table[protocol].short_min) && 
@@ -331,41 +371,60 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					code[1] = 0;
 					code[2] = 0;
 					code[3] = 0;
+
+					for (i = 0; i < 255; i++)
+					{
+						pls_dur[i] = 0;
+					}
 					break;
 				}
 			}
 			
 			if ((0x2EC5 == code[0]) && (0xBB91 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/nexa 1");
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
 			} 
-			if ((0x2EC5 == code[0]) && (0xBB81 == code[1]))
+			else if ((0x2EC5 == code[0]) && (0xBB81 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/nexa 2");
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
 			} 
-			if ((0x2EC5 == code[0]) && (0xBB90 == code[1]))
+			else if ((0x2EC5 == code[0]) && (0xBB90 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/nexa 3");
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
 			} 
-			if ((0x2EC5 == code[0]) && (0xBB80 == code[1]))
+			else if ((0x2EC5 == code[0]) && (0xBB80 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/nexa 4");
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
 			} 
-			if ((0x2EC5 == code[0]) && (0xBB92 == code[1]))
+			else if ((0x2EC5 == code[0]) && (0xBB92 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/nexa 5");
-			} 
-			if ((0x2EC5 == code[0]) && (0xBB82 == code[1]))
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+			}
+			else if ((0x2EC5 == code[0]) && (0xBB82 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/nexa 6");
-			} 
-			if ((0x2EC5 == code[0]) && (0xBBA0 == code[1]))
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+			}
+			else if ((0x2EC5 == code[0]) && (0xBBA0 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/nexa 0");
-			} 
-}
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+			}
+			else if ((0x5807 == code[0]) && ((0xF689 == code[1]) || (0xF699 == code[1])))
+			{
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/rf/www/nexa 3");
+				sprintf(cmd,"%s %0x %0x %0x %0x %d", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 3);
+				system(cmd);
+				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/rf/www/nexa 4");
+			}
+			else
+			{
+				/* Ignore the code */
+			}
+
 		}
+		}
+
 		printf("code received is %0x %0x %0x %0x\n", code[0], code [1], code[2], code[3]);
+
 		for (i = 0; i < 255; i++)
 		{
 			pls_dur[i] = 0;
@@ -377,10 +436,8 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 		code[2] = 0;
 		code[3] = 0;
 		sleep(2);
-
-		
 		}
-        }	
+        }
 }
 prev_time = curr_time;
 }

@@ -105,6 +105,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 	EVENT_CLEAR(PORT_NUM);
 	curr_time = *(volatile unsigned int *)(stm + 1);
 	pulse_duration = curr_time - prev_time;
+
     	if ((pulse_duration > PULSE_INTERFRAME_GAP_MIN) && 
 		(pulse_duration < PULSE_INTERFRAME_GAP_MAX) &&
 		(0 == start_detected))
@@ -116,7 +117,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			counter = 0;
 		}
 	}
-	
+
 	if (start_detected == 1)
         {
 		pls_dur[pulse_count++] = pulse_duration;
@@ -130,6 +131,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 
 			for( i = 2; i < MAX_PULSE_COUNT; i+=2)
 			{
+
 				code <<= 1;
 
 				if ((pls_dur[i] > PULSE_SHORT_BELL_MIN) && 
@@ -161,7 +163,6 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			if (0x704 == code)
 			{
 				//unsigned int result = system("sudo -u pi ssh -lpi 192.168.1.18 sudo pidof mplayer");
-				//printf("result is %d\n", result);
 	    			
 				//toggle = (result == 256)?1:0;
 
