@@ -284,20 +284,21 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 
 				if (0 != code_matched)
 				{
+					system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
+
 					if ((code[0] & 0xFF) != (prev_code[code_matched - 1][0] & 0xFF))
 					{
-						sprintf(cmd,"%s %0x %0x %0x %0x %d", "/home/pi/webcam.sh &", code[0], code[1], code[2], code[3], code_matched);
-
 						if (1 == code_matched)
 						{
-							system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_zone1.sh &");
+							sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], code_matched);
 						}
 
 						if (2 == code_matched)
 						{
-							system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_zone2.sh &");
+							sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], code_matched);
 						}
 						system(cmd);
+						system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
 					}
 
 					prev_code[code_matched - 1][0] = code[0];
@@ -309,8 +310,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					code_matched = 0;
 				}
 			}
-
-			if ((BELL == protocol) && (0x704 == code[0]))
+			else if ((BELL == protocol) && (0x704 == code[0]))
 			{
 				if (toggle)
 				{
@@ -323,16 +323,19 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					system("sudo -u pi ssh -lpi 192.168.1.18 sudo pkill mplayer &");
 				}
 			}
-
-			if ((BYRON == protocol) && (0xB2C == code[0]))
+			else if ((BYRON == protocol) && (0xB2C == code[0]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/rf/www/nexa 3");
-				sprintf(cmd,"%s %0x %0x %0x %0x %d", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 4);
+				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
+				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 4);
 				system(cmd);
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/rf/www/nexa 4");
+				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
+			}
+			else
+			{
+				/* Do nothing */
 			}
 		}
-		else
+		else /* protocol == NEXA */
 		{ 
 		if ((pls_dur[1] > 2300) && (pls_dur[1] < 2900))
 		{
@@ -410,10 +413,11 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			}
 			else if ((0x5807 == code[0]) && ((0xF689 == code[1]) || (0xF699 == code[1])))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/rf/www/nexa 3");
-				sprintf(cmd,"%s %0x %0x %0x %0x %d", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 3);
+				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
+				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 3);
 				system(cmd);
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/rf/www/nexa 4");
+				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
+
 			}
 			else
 			{
@@ -423,7 +427,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 		}
 		}
 
-		printf("code received is %0x %0x %0x %0x\n", code[0], code [1], code[2], code[3]);
+//		printf("code received is %0x %0x %0x %0x\n", code[0], code [1], code[2], code[3]);
 
 		for (i = 0; i < 255; i++)
 		{
