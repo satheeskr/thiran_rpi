@@ -21,8 +21,10 @@ volatile unsigned int current_time = 0;
 
 #define PORT_NUM 23u
 
-#define PULSE_SHORT_BELL 280u
-#define PULSE_LONG_BELL (PULSE_SHORT_BELL * 2u)
+#define PULSE_SHORT0_BELL (370u)
+#define PULSE_LONG0_BELL (630u)
+#define PULSE_SHORT1_BELL (300u)
+#define PULSE_LONG1_BELL (700u)
 
 inline DELAY_USECONDS(unsigned int delay)
 {
@@ -34,11 +36,12 @@ inline DELAY_USECONDS(unsigned int delay)
 	}
 }
 
+
 /* This function sends the binary code 0 and 1 to the wireless
-   bell. 0 is sent as a 280us low pulse folowed by 560us high 
-   pulse. 1 is sent as a 560us low pulse followed by 280us 
+   bell. 0 is sent as a 630us low pulse folowed by 370us high 
+   pulse. 1 is sent as a 300us low pulse followed by 700us 
    high pulse. Sync pulse is sent between the byte codes. Sync 
-   pulse is sent as a 10ms (280us x 36) low pulse.
+   pulse is sent as a 11ms (300us x 39) low pulse.
    This is repeated 10 times so that the receiver 
    catches at least one */
 void send_code_bell(unsigned char * bytecode)
@@ -51,7 +54,7 @@ for (x = 0; x < 10; x++)
 
 	/* Send Start bit */
 	SET_PORT(PORT_NUM);	
-	DELAY_USECONDS(PULSE_SHORT_BELL);				
+	DELAY_USECONDS(PULSE_SHORT0_BELL);				
 
 	while(bytecode[i] != '\0')
 	{		
@@ -59,23 +62,23 @@ for (x = 0; x < 10; x++)
 		if('1' == bytecode[i])
 		{
 			CLR_PORT(PORT_NUM);			
-			DELAY_USECONDS(PULSE_LONG_BELL);
+			DELAY_USECONDS(PULSE_SHORT1_BELL);
 			SET_PORT(PORT_NUM);			
-			DELAY_USECONDS(PULSE_SHORT_BELL);
+			DELAY_USECONDS(PULSE_LONG1_BELL);
 		}
 		else /* Send bit 0 */
 		{
 			CLR_PORT(PORT_NUM);
-			DELAY_USECONDS(PULSE_SHORT_BELL);						
+			DELAY_USECONDS(PULSE_LONG0_BELL);						
 			SET_PORT(PORT_NUM);			
-			DELAY_USECONDS(PULSE_LONG_BELL);						
+			DELAY_USECONDS(PULSE_SHORT0_BELL);						
 		}
 		i++;
 	}
 
 	/* Send Sync bits */
 	CLR_PORT(PORT_NUM);	
-	DELAY_USECONDS((PULSE_SHORT_BELL * 36));			
+	DELAY_USECONDS((PULSE_SHORT0_BELL * 32));			
 }
 }
 
@@ -84,8 +87,8 @@ int main(int argc, char *argv[])
 int fp, fp1;
 void * gpio_map;
 void * stm_base; 
-unsigned char * bytecode_bell;
-unsigned int min;
+unsigned char * bytecode;
+volatile unsigned int cmd;
 
 if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
 {
@@ -118,25 +121,7 @@ close(fp1);
 INPORT(PORT_NUM);
 OUTPORT(PORT_NUM);
 
-bytecode_bell = "011100000100"; /* 0x8FB */
-
-/* Sound the bell after the expiry of the minute timer */
-if (2u != argc)
-{
-	/* Don't wait if no delay provided */
-	min = 0u;
-}
-else
-{
-	min = atoi(argv[1u]);
-}
-
-/* Wait before ringing the bell */
-sleep(min * 60u);
-
 /* Ding-dong */
-send_code_bell(bytecode_bell);
-
-CLR_PORT(PORT_NUM);
+send_code_bell("010011010011");
 INPORT(PORT_NUM);
 }

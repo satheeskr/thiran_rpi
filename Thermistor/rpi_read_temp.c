@@ -128,7 +128,7 @@ close(fp);
 spi_config();
 
 /* Run indefinitely */
-while(1)
+//while(1)
 {
 	/* Transmit ADC read command and receive results */
 	thermistor_counts = spi_read_adc(0);
@@ -167,8 +167,10 @@ while(1)
 	if (TRUE == print)
 	{	
 		print = FALSE;
-		system("date");
-		fprintf (stderr, "Temperature is: %4.2f degC\n", temp_ramp);
+		//system("date");
+		//fprintf (stderr, "Temperature is: %4.2f degC\n", temp_ramp);
+		//printf ("Temperature is: %4.2f degC\n", temp_ramp);
+		printf ("%2.2f", temp_ramp);
 	}
 	
 	/* Blink LED if the temperature is out of range */
@@ -289,7 +291,7 @@ ABP frequency = 250MHz
 CDIV = 16384
 SPI speed = 15.25kHz
  */
-SPI0_CLK = 16384u;
+SPI0_CLK = 256u;
 }
 
 /*========================================================= 

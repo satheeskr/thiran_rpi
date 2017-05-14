@@ -12,7 +12,7 @@ Header file for rpi_motor_control.c
 #define TRUE 1u
 #define FALSE 0u
 
-#define PERIPHERAL_BASE (0x20000000u)
+#define PERIPHERAL_BASE (0x3F000000u)
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000u)
 #define SPI_BASE  (PERIPHERAL_BASE + 0x204000u)
 
