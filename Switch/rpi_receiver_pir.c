@@ -226,7 +226,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			for( i = 1; i < protocol_table[protocol].max_bits; i+=2)
 			{
 				code[i / 32] <<= 1;
-				//printf("pulse duration %d %d\n", pls_dur[i], pls_dur[i+1]);
+//				printf("pulse duration %d %d\n", pls_dur[i], pls_dur[i+1]);
 				if ((pls_dur[i] > protocol_table[protocol].short_min) && 
 					(pls_dur[i] < protocol_table[protocol].short_max) && 
 					(pls_dur[i+1] > protocol_table[protocol].long_min) && 
