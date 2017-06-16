@@ -239,28 +239,6 @@ pthread_t threads[NUM_THREADS];
 int i;
 int result;
 
-/* Create threads */
-result = pthread_create(&threads[0], NULL, read_temp, NULL);
-
-if (0 != result)
-{
-	printf("Thread cannot be created: %d\n", result);
-}
-
-result = pthread_create(&threads[1], NULL, motor_control, NULL);
-
-if (0 != result)
-{
-	printf("Thread cannot be created: %d\n", result);
-}
-
-result = pthread_create(&threads[2], NULL, blink, NULL);
-
-if (0 != result)
-{
-	printf("Thread cannot be created: %d\n", result);
-}
-
 /* Open the mem device file for writing */
 if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
 {
@@ -286,6 +264,31 @@ close(fp);
 	
 /* Configure SPI and GPIO registers */
 spi_config();
+
+/* Create threads */
+result = pthread_create(&threads[0], NULL, read_temp, NULL);
+
+if (0 != result)
+{
+	printf("Thread cannot be created: %d\n", result);
+	exit(-1);
+}
+
+result = pthread_create(&threads[1], NULL, motor_control, NULL);
+
+if (0 != result)
+{
+	printf("Thread cannot be created: %d\n", result);
+	exit(-1);
+}
+
+result = pthread_create(&threads[2], NULL, blink, NULL);
+
+if (0 != result)
+{
+	printf("Thread cannot be created: %d\n", result);
+	exit(-1);
+}
 
 /* Wait till threads complete */
 for (i = 0; i < NUM_THREADS; i++)

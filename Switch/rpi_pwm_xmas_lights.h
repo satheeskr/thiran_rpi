@@ -12,7 +12,7 @@ Header file for rpi_pwm_xmas_lights.c
 #define TRUE 1u
 #define FALSE 0u
 
-#define PERIPHERAL_BASE (0x20000000u)
+#define PERIPHERAL_BASE (0x3F000000u)
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000u)
 #define SPI_BASE  (PERIPHERAL_BASE + 0x204000u)
 #define PWM_BASE  (PERIPHERAL_BASE + 0x20C000u)

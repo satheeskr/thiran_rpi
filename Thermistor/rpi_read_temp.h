@@ -12,7 +12,7 @@ Header file for rpi_read_temp.c
 #define TRUE 1
 #define FALSE 0
 
-#define PERIPHERAL_BASE (0x20000000)
+#define PERIPHERAL_BASE (0x3F000000)
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
 #define SPI_BASE  (PERIPHERAL_BASE + 0x204000)
 
