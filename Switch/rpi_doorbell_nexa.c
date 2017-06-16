@@ -23,7 +23,6 @@ volatile unsigned int current_time = 0;
 #define PULSE_SHORT 265u
 #define PULSE_LONG (PULSE_SHORT * 5u)
 #define PULSE_PREAMBLE (PULSE_SHORT * 10u)
-#define PULSE_LONG (PULSE_SHORT * 5u)
 
 #define PULSE_SHORT_BELL 280u
 #define PULSE_LONG_BELL (PULSE_SHORT_BELL * 2u)
@@ -227,6 +226,9 @@ case 6: /* Switch 3 off */
 	break;
 case 0: /* All Switches off */
 	bytecode = "00101110110001011011101110100000"; /* 0x2EC5BBA0 */
+	break;
+case 55: /* Magnetic Switch Alarm */
+	bytecode = "01011000000001111111011010001001"; /* 0x5807F689 */
 	break;
 default:
 	printf("Enter 1 to turn ON switch 1\n");
