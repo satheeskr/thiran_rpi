@@ -26,6 +26,17 @@ volatile unsigned int current_time = 0;
 
 #define PORT_NUM 23u
 
+#define PIR1_CODE1 0xF8DA
+#define PIR1_CODE2 0x1831
+#define PIR2_CODE1 0x6416
+#define PIR2_CODE2 0x042C
+
+#define BELL_CODE 0x704
+#define BYRON_CODE 0xB2C
+#define NEXA_MS1_CODE1 0x5807
+#define NEXA_MS1_CODE2 0xF689
+#define NEXA_MS1_CODE3 0xF699
+
 typedef enum
 {
 PIR,
@@ -236,12 +247,12 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			if (PIR == protocol)
 			{
 				unsigned char code_matched = 0;
-				if ((code[1] == 0xF8DA) && (code[2] == 0x1831) && ((code[3] & 0xFF00) == 0x2200))
+				if ((code[1] == PIR1_CODE1) && (code[2] == PIR1_CODE2) && ((code[3] & 0xFF00) == 0x2200))
 				{
 //					printf("PIR 1 detected\n");
 					code_matched = 1;
 				}
-				else if ((code[1] == 0x6416) && (code[2] == 0x042C) && ((code[3] & 0xFF00) == 0x2200))
+				else if ((code[1] == PIR2_CODE1) && (code[2] == PIR2_CODE2) && ((code[3] & 0xFF00) == 0x2200))
 				{
 //					printf("PIR 2 detected\n");
 					code_matched = 2;
@@ -281,7 +292,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					code_matched = 0;
 				}
 			}
-			else if ((BELL == protocol) && (0x704 == code[0]))
+			else if ((BELL == protocol) && (BELL_CODE == code[0]))
 			{
 				code_valid = 1;
 
@@ -296,7 +307,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					system("sudo -u pi ssh -lpi 192.168.1.18 sudo pkill mplayer &");
 				}
 			}
-			else if ((BYRON == protocol) && (0xB2C == code[0]))
+			else if ((BYRON == protocol) && (BYRON_CODE == code[0]))
 			{
 				code_valid = 1;
 
@@ -358,47 +369,46 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					break;
 				}
 			}
-			/*
+			
 			if ((0x2EC5 == code[0]) && (0xBB91 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+				code_valid = 1;
 			} 
 			else if ((0x2EC5 == code[0]) && (0xBB81 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+				code_valid = 1;
 			} 
 			else if ((0x2EC5 == code[0]) && (0xBB90 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+				code_valid = 1;
 			} 
 			else if ((0x2EC5 == code[0]) && (0xBB80 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+				code_valid = 1;
 			} 
 			else if ((0x2EC5 == code[0]) && (0xBB92 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+				code_valid = 1;
 			}
 			else if ((0x2EC5 == code[0]) && (0xBB82 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+				code_valid = 1;
 			}
 			else if ((0x2EC5 == code[0]) && (0xBBA0 == code[1]))
 			{
-				system("sudo -u pi ssh -lpi 192.168.1.18 sudo /var/www/rf/byron");
+				code_valid = 1;
 			}
 			else 
 			{
 			}
-			*/
 
-			if ((0x5807 == code[0]) && ((0xF689 == code[1]) || (0xF699 == code[1])))
+			if ((NEXA_MS1_CODE1 == code[0]) && ((NEXA_MS1_CODE2 == code[1]) || (NEXA_MS1_CODE3 == code[1])))
 			{
 				code_valid = 1;
-				//system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
-				//sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 3);
-				//system(cmd);
-				//system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
+				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
+				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 3);
+				system(cmd);
+				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
 
 			}
 			else
