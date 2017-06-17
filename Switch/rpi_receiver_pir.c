@@ -1,11 +1,24 @@
+/*=============================================
+Name: rpi_receiver_pir.c
+Author: Sathees Balya
+Description:
+This file implements the features required to
+receive Off-On Keying (OOK) modulated RF signals 
+from the 433MHz receiver. It currently supports 
+Friedland PIR sensor, NEXA remote switch and
+magnetic door sensor, Door bells from Byron
+and 1-by-one. After receiving the codes, it 
+turns the lamps and sends a picture to the
+configured email address.
+==============================================*/
 #include "rpi_receiver_pir.h"
 
 const pulse_t protocol_table[MAX_PROTOCOL] = 
 {
-	{1, 1300 * TL0, 1300 * TH0, 1040 * TL0, 1040 * TH0, 2080 * TL0, 2080 * TH0, 23900,       24000,          0,          0,       129},
-	{0,  280 * TL1,  280 * TH1,  280 * TL1,  280 * TH1,  560 * TL1,  560 * TH1,  9980,       10180,          0,          0,        25},
-	{1,  330 * TL2,  330 * TH2,  330 * TL2,  330 * TH2,  660 * TL2,  660 * TH2, 10692,       13068,          0,          0,        25},
-	{1,  265 * TL3,  265 * TH3,  265 * TL3,  265 * TH3, 1325 * TL3, 1325 * TH3, 10070 * TL3, 10070 * TH3, 2650 * TL3, 2650 * TH3, 130},
+	{P1_ENABLED, 1300 * TL0, 1300 * TH0, 1040 * TL0, 1040 * TH0, 2080 * TL0, 2080 * TH0, 23900,       24000,          0,          0,       129},
+	{P2_ENABLED,  280 * TL1,  280 * TH1,  280 * TL1,  280 * TH1,  560 * TL1,  560 * TH1,  9980,       10180,          0,          0,        25},
+	{P3_ENABLED,  330 * TL2,  330 * TH2,  330 * TL2,  330 * TH2,  660 * TL2,  660 * TH2, 10692,       13068,          0,          0,        25},
+	{P4_ENABLED,  265 * TL3,  265 * TH3,  265 * TL3,  265 * TH3, 1325 * TL3, 1325 * TH3, 10070 * TL3, 10070 * TH3, 2650 * TL3, 2650 * TH3, 130},
 };
 
 inline DELAY_USECONDS(unsigned int delay)
@@ -115,20 +128,24 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 	if (start_detected == 1)
         {
 		pls_dur[pulse_count++] = pulse_duration;
-		//printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
-
+#ifdef DEBUG_L2		
+		printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
+#endif
 		if(pulse_count == protocol_table[protocol].max_bits)
 		{
 		start_detected = 0;
-//		printf("protocol %d\n", protocol);
-
+#ifdef DEBUG		
+		printf("protocol %d\n", protocol);
+#endif
 		if (NEXA > protocol)
 		{
 			pulse_count = 0;
 			for( i = 1; i < protocol_table[protocol].max_bits; i+=2)
 			{
 				code[i / 32] <<= 1;
-//				printf("pulse duration %d %d\n", pls_dur[i], pls_dur[i+1]);
+#ifdef DEBUG		
+				printf("pulse duration %d %d\n", pls_dur[i], pls_dur[i+1]);
+#endif
 				if ((pls_dur[i] > protocol_table[protocol].short_min) && 
 					(pls_dur[i] < protocol_table[protocol].short_max) && 
 					(pls_dur[i+1] > protocol_table[protocol].long_min) && 
@@ -145,6 +162,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 				}
 				else
 				{
+#ifndef DEBUG		
 					/* Incorrect pulse, reset code */
 					code[0] = 0;
 					code[1] = 0;
@@ -156,6 +174,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 						pls_dur[i] = 0;
 					}
 					break;
+#endif
 				}
 			}
 
@@ -171,12 +190,16 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 				unsigned char code_matched = 0;
 				if ((code[1] == PIR1_CODE1) && (code[2] == PIR1_CODE2) && ((code[3] & 0xFF00) == 0x2200))
 				{
-//					printf("PIR 1 detected\n");
+#ifdef DEBUG		
+					printf("PIR 1 detected\n");
+#endif
 					code_matched = 1;
 				}
 				else if ((code[1] == PIR2_CODE1) && (code[2] == PIR2_CODE2) && ((code[3] & 0xFF00) == 0x2200))
 				{
-//					printf("PIR 2 detected\n");
+#ifdef DEBUG		
+					printf("PIR 2 detected\n");
+#endif
 					code_matched = 2;
 				}
 				else
@@ -249,11 +272,15 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			(pls_dur[1] < protocol_table[protocol].preamble_max))
 		{
 			pulse_count = 0;
-//			printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
+#ifdef DEBUG		
+			printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
+#endif
 			for( i = 2; i < protocol_table[protocol].max_bits; i+=4)
 			{
 				code[i / 64] <<= 1;
-//				printf("pulse duration %d %d %d %d\n", pls_dur[i], pls_dur[i+1], pls_dur[i+2], pls_dur[i+3]);
+#ifdef DEBUG		
+				printf("pulse duration %d %d %d %d\n", pls_dur[i], pls_dur[i+1], pls_dur[i+2], pls_dur[i+3]);
+#endif
 				if ((pls_dur[i] > protocol_table[protocol].short_min) && 
 					(pls_dur[i] < protocol_table[protocol].short_max) && 
 					(pls_dur[i+1] > protocol_table[protocol].short_min) && 
@@ -278,6 +305,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 				}
 				else
 				{
+#ifndef DEBUG		
 					/* Incorrect pulse, reset code */
 					code[0] = 0;
 					code[1] = 0;
@@ -289,6 +317,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 						pls_dur[i] = 0;
 					}
 					break;
+#endif
 				}
 			}
 			
@@ -322,9 +351,10 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			}
 			else 
 			{
+				/* do nothing */
 			}
 
-			if ((NEXA_MS1_CODE1 == code[0]) && ((NEXA_MS1_CODE2 == code[1]) || (NEXA_MS1_CODE3 == code[1])))
+			if ((NEXA_MS1_CODE1 == code[0]) || ((NEXA_MS1_CODE2 == code[1]) || (NEXA_MS1_CODE3 == code[1])))
 			{
 				code_valid = 1;
 				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
@@ -340,9 +370,9 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 
 		}
 		}
-
-//		printf("code received is %0x %0x %0x %0x\n", code[0], code [1], code[2], code[3]);
-
+#ifdef DEBUG		
+		printf("code received is %0x %0x %0x %0x\n", code[0], code [1], code[2], code[3]);
+#endif
 		for (i = 0; i < 255; i++)
 		{
 			pls_dur[i] = 0;

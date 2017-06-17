@@ -37,6 +37,29 @@ volatile unsigned int current_time = 0;
 #define NEXA_MS1_CODE2 0xF689
 #define NEXA_MS1_CODE3 0xF699
 
+/* Tolerance percent */
+#define T0 10
+#define T1 20
+#define T2 20
+#define T3 40
+
+/* Lower and upper limits */
+#define TL0 (1 - ((float)T0/100))
+#define TH0 (1 + ((float)T0/100))
+#define TL1 (1 - ((float)T1/100))
+#define TH1 (1 + ((float)T1/100))
+#define TL2 (1 - ((float)T2/100))
+#define TH2 (1 + ((float)T2/100))
+#define TL3 (1 - ((float)T3/100))
+#define TH3 (1 + ((float)T3/100))
+
+/* Enable/disable protocols */
+#define P1_ENABLED 1
+#define P2_ENABLED 0
+#define P3_ENABLED 1
+#define P4_ENABLED 1
+
+/* Supported protocols */
 typedef enum
 {
 PIR,
@@ -47,6 +70,7 @@ NEXA,
 MAX_PROTOCOL
 }protocol_t;
 
+/* Protocol configuration */
 typedef struct
 {
         unsigned char enabled;
@@ -63,17 +87,3 @@ typedef struct
         unsigned int max_bits;
 }pulse_t;
 
-/* Tolerance percent */
-#define T0 10
-#define T1 20
-#define T2 20
-#define T3 20
-
-#define TL0 (1 - ((float)T0/100))
-#define TH0 (1 + ((float)T0/100))
-#define TL1 (1 - ((float)T1/100))
-#define TH1 (1 + ((float)T1/100))
-#define TL2 (1 - ((float)T2/100))
-#define TH2 (1 + ((float)T2/100))
-#define TL3 (1 - ((float)T3/100))
-#define TH3 (1 + ((float)T3/100))
