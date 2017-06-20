@@ -46,6 +46,11 @@ unsigned char start_detected = 0;
 unsigned int pls_dur[255];
 unsigned char cmd[100];
 unsigned char code_valid = 0;
+unsigned char protocol;
+unsigned short i = 0u;
+unsigned short bits = 0u;
+unsigned short code[4] = {0};
+unsigned short prev_code[3][4] = {0};
 
 if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
 {
@@ -85,15 +90,15 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 	EVENT_CLEAR(PORT_NUM);
 	curr_time = *(volatile unsigned int *)(stm + 1);
 	
+	/* U32 roll-over check */
 	if (curr_time > prev_time)
 	{
 		pulse_duration = curr_time - prev_time;
 	}
-
-	unsigned char protocol;
-	unsigned short i;
-	unsigned short code[4] = {0};
-	unsigned short prev_code[3][4] = {0};
+	else
+	{
+		pulse_duration = U32_MAX - curr_time + prev_time + 1u;
+	}
 
 	/* Detect long inter-frame gap and the start bit to identify the real message */
 	if ((0 == start_detected) && (0 == inter_frame_gap))
@@ -128,14 +133,13 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 	if (start_detected == 1)
         {
 		pls_dur[pulse_count++] = pulse_duration;
-#ifdef DEBUG_L2		
-		printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
-#endif
+
 		if(pulse_count == protocol_table[protocol].max_bits)
 		{
 		start_detected = 0;
 #ifdef DEBUG		
 		printf("protocol %d\n", protocol);
+		printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
 #endif
 		if (NEXA > protocol)
 		{
@@ -169,9 +173,9 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					code[2] = 0;
 					code[3] = 0;
 					
-					for (i = 0; i < 255; i++)
+					for (bits = 0; bits < 256; bits++)
 					{
-						pls_dur[i] = 0;
+						pls_dur[bits] = 0;
 					}
 					break;
 #endif
@@ -268,17 +272,15 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 		}
 		else /* protocol == NEXA */
 		{ 
-		if ((pls_dur[1] > protocol_table[protocol].preamble_min) && 
-			(pls_dur[1] < protocol_table[protocol].preamble_max))
+//		if ((pls_dur[1] > protocol_table[protocol].preamble_min) && 
+//			(pls_dur[1] < protocol_table[protocol].preamble_max))
 		{
 			pulse_count = 0;
-#ifdef DEBUG		
-			printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
-#endif
+
 			for( i = 2; i < protocol_table[protocol].max_bits; i+=4)
 			{
 				code[i / 64] <<= 1;
-#ifdef DEBUG		
+#ifdef DEBUG
 				printf("pulse duration %d %d %d %d\n", pls_dur[i], pls_dur[i+1], pls_dur[i+2], pls_dur[i+3]);
 #endif
 				if ((pls_dur[i] > protocol_table[protocol].short_min) && 
@@ -312,9 +314,9 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 					code[2] = 0;
 					code[3] = 0;
 
-					for (i = 0; i < 255; i++)
+					for (bits = 0; bits < 256; bits++)
 					{
-						pls_dur[i] = 0;
+						pls_dur[bits] = 0;
 					}
 					break;
 #endif
@@ -373,9 +375,9 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 #ifdef DEBUG		
 		printf("code received is %0x %0x %0x %0x\n", code[0], code [1], code[2], code[3]);
 #endif
-		for (i = 0; i < 255; i++)
+		for (bits = 0; bits < 256; bits++)
 		{
-			pls_dur[i] = 0;
+			pls_dur[bits] = 0;
 		}
 
 		/* Reset code */

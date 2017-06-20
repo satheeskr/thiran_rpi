@@ -1,3 +1,5 @@
+#ifndef RPI_PIR_RECEIVER_H
+
 #include "stdio.h"
 #include "stdlib.h"
 #include "sys/mman.h"
@@ -41,7 +43,7 @@ volatile unsigned int current_time = 0;
 #define T0 10
 #define T1 20
 #define T2 20
-#define T3 40
+#define T3 20
 
 /* Lower and upper limits */
 #define TL0 (1 - ((float)T0/100))
@@ -58,6 +60,8 @@ volatile unsigned int current_time = 0;
 #define P2_ENABLED 0
 #define P3_ENABLED 1
 #define P4_ENABLED 1
+
+#define U32_MAX 4294967295uL
 
 /* Supported protocols */
 typedef enum
@@ -87,3 +91,4 @@ typedef struct
         unsigned int max_bits;
 }pulse_t;
 
+#endif
