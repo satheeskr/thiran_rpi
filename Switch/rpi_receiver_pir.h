@@ -13,6 +13,9 @@ volatile unsigned int * stm;
 volatile unsigned int start_time = 0; 
 volatile unsigned int current_time = 0; 
 
+#define TRUE 1u
+#define FALSE 0u
+
 #define PERIPHERAL_BASE (0x20000000)
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
 #define STM_BASE (0x20003000)
@@ -30,12 +33,16 @@ volatile unsigned int current_time = 0;
 
 #define PIR1_CODE1 0xF8DA
 #define PIR1_CODE2 0x1831
+#define PIR1_CODE3 0x2200
 #define PIR2_CODE1 0x6416
 #define PIR2_CODE2 0x042C
+#define PIR2_CODE3 0x2200
 #define PIR3_CODE1 0x125E
 #define PIR3_CODE2 0x2E8F
+#define PIR3_CODE3 0x6200
 #define PIR4_CODE1 0x2F76
 #define PIR4_CODE2 0x61F4
+#define PIR4_CODE3 0x2200
 
 #define BELL_CODE 0x704
 #define BYRON_CODE 0xB2C
@@ -47,7 +54,7 @@ volatile unsigned int current_time = 0;
 #define T0 20
 #define T1 20
 #define T2 20
-#define T3 20
+#define T3 40
 
 /* Lower and upper limits */
 #define TL0 (1 - ((float)T0/100))
@@ -61,7 +68,7 @@ volatile unsigned int current_time = 0;
 
 /* Enable/disable protocols */
 #define P1_ENABLED 1
-#define P2_ENABLED 0
+#define P2_ENABLED 1
 #define P3_ENABLED 1
 #define P4_ENABLED 1
 
@@ -94,6 +101,7 @@ typedef struct
 {
 	unsigned long code1;
 	unsigned long code2;
+	unsigned long code3;
 }pir_t;
 
 /* Protocol configuration */

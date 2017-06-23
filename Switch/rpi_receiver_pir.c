@@ -15,7 +15,7 @@ configured email address.
 
 const pulse_t protocol_table[MAX_PROTOCOL] = 
 {
-	{P1_ENABLED, 1300 * TL0, 1300 * TH0, 1040 * TL0, 1040 * TH0, 2080 * TL0, 2080 * TH0, 23900,       24000,          0,          0,       129},
+	{P1_ENABLED, 1300 * TL0, 1300 * TH0, 1040 * TL0, 1040 * TH0, 2080 * TL0, 2080 * TH0, 23500,       24500,          0,          0,       129},
 	{P2_ENABLED,  280 * TL1,  280 * TH1,  280 * TL1,  280 * TH1,  560 * TL1,  560 * TH1,  9980,       10180,          0,          0,        25},
 	{P3_ENABLED,  330 * TL2,  330 * TH2,  330 * TL2,  330 * TH2,  660 * TL2,  660 * TH2, 10692,       13068,          0,          0,        25},
 	{P4_ENABLED,  265 * TL3,  265 * TH3,  265 * TL3,  265 * TH3, 1325 * TL3, 1325 * TH3, 10070 * TL3, 10070 * TH3, 2650 * TL3, 2650 * TH3, 130},
@@ -23,10 +23,10 @@ const pulse_t protocol_table[MAX_PROTOCOL] =
 
 const pir_t pir_table[MAX_NUM_PIR] = 
 {
-	{PIR1_CODE1, PIR1_CODE2},
-	{PIR2_CODE1, PIR2_CODE2},
-	{PIR3_CODE1, PIR3_CODE2},
-	{PIR4_CODE1, PIR4_CODE2},
+	{PIR1_CODE1, PIR1_CODE2, PIR1_CODE3},
+	{PIR2_CODE1, PIR2_CODE2, PIR2_CODE3},
+	{PIR3_CODE1, PIR3_CODE2, PIR3_CODE3},
+	{PIR4_CODE1, PIR4_CODE2, PIR4_CODE3},
 };
 
 inline DELAY_USECONDS(unsigned int delay)
@@ -109,42 +109,53 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 	}
 
 	/* Detect long inter-frame gap and the start bit to identify the real message */
-	if ((0 == start_detected) && (0 == inter_frame_gap))
+	if ((FALSE == start_detected) && (FALSE == inter_frame_gap))
 	{
 		for (protocol = 0; protocol < MAX_PROTOCOL; protocol++)
 		{
-	    		if ((1u == protocol_table[protocol].enabled) &&
+	    		if ((TRUE == protocol_table[protocol].enabled) &&
 				(pulse_duration >  protocol_table[protocol].if_gap_min) &&
 				(pulse_duration < protocol_table[protocol].if_gap_max))
 			{
-				inter_frame_gap = 1;
+				inter_frame_gap = TRUE;
 				break;
 			}
 		}
 	}
-	else if (1 == inter_frame_gap)
+	else if (TRUE == inter_frame_gap)
 	{
-		inter_frame_gap = 0;
+		inter_frame_gap = FALSE;
 
  		if ((pulse_duration > protocol_table[protocol].start_min) &&
 			(pulse_duration < protocol_table[protocol].start_max))
 		{
-			start_detected = 1;
+			start_detected = TRUE;
+			pls_dur[pulse_count++] = pulse_duration;
+			continue;
 		}
 	}
 	else
 	{
 		/* Ignore the pulse */
-		inter_frame_gap = 0;
+		inter_frame_gap = FALSE;
 	}
 
-	if (start_detected == 1)
+	if (start_detected == TRUE)
         {
 		pls_dur[pulse_count++] = pulse_duration;
 
+		if (1u == protocol)
+		{
+			if ((pls_dur[1] > protocol_table[3u].preamble_min) && 
+				(pls_dur[1] < protocol_table[3u].preamble_max))
+			{
+				protocol = 3u;
+			}
+		}
+
 		if(pulse_count == protocol_table[protocol].max_bits)
 		{
-		start_detected = 0;
+		start_detected = FALSE;
 #ifdef DEBUG		
 		printf("protocol %d\n", protocol);
 		printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
@@ -205,7 +216,8 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 				for (num_pir = 0u; num_pir < MAX_NUM_PIR; num_pir++)
 				{
 					if ((code[1] == pir_table[num_pir].code1) && 
-						(code[2] == pir_table[num_pir].code2))
+						(code[2] == pir_table[num_pir].code2) &&
+						((0xFF00 & code[3]) == pir_table[num_pir].code3))
 					{
 						code_matched = num_pir + 1u;
 #ifdef DEBUG		
@@ -222,10 +234,10 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 
 					if ((code[0] & 0xFF) != (prev_code[code_matched - 1][0] & 0xFF))
 					{
-						system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
+						system("/home/pi/pir_response_start.sh");
 						sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], code_matched);
 						system(cmd);
-						system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
+						system("/home/pi/pir_response_end.sh &");
 					}
 
 					prev_code[code_matched - 1][0] = code[0];
@@ -244,22 +256,22 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 				if (toggle)
 				{
 					toggle = 0;
-					system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/fmradio.sh &");
+					system("/home/pi/pyradio_on.sh &");
 				}
 				else
 				{
 					toggle = 1;
-					system("sudo -u pi ssh -lpi 192.168.1.18 sudo pkill mplayer &");
+					system("/home/pi/pyradio_off.sh &");
 				}
 			}
 			else if ((BYRON == protocol) && (BYRON_CODE == code[0]))
 			{
 				code_valid = 1;
 
-				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
+				system("/home/pi/pir_response_start.sh");
 				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 40);
 				system(cmd);
-				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
+				system("/home/pi/pir_response_end.sh &");
 			}
 			else
 			{
@@ -318,20 +330,24 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 #endif
 				}
 			}
-			
-			if ((0x2EC5 == code[0]) && (0xBB91 == code[1]))
+			if ((0x2EC5 == code[0]) && (0xBABA == code[1]))
 			{
-				code_valid = 1;
-			} 
-			else if ((0x2EC5 == code[0]) && (0xBB81 == code[1]))
-			{
-				code_valid = 1;
-			} 
+				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 99);
+				system(cmd);
+			}
 			else if ((0x2EC5 == code[0]) && (0xBB90 == code[1]))
 			{
 				code_valid = 1;
 			} 
 			else if ((0x2EC5 == code[0]) && (0xBB80 == code[1]))
+			{
+				code_valid = 1;
+			} 
+			else if ((0x2EC5 == code[0]) && (0xBB91 == code[1]))
+			{
+				code_valid = 1;
+			} 
+			else if ((0x2EC5 == code[0]) && (0xBB81 == code[1]))
 			{
 				code_valid = 1;
 			} 
@@ -355,10 +371,10 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			if ((NEXA_MS1_CODE1 == code[0]) || ((NEXA_MS1_CODE2 == code[1]) || (NEXA_MS1_CODE3 == code[1])))
 			{
 				code_valid = 1;
-				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
+				system("/home/pi/pir_response_start.sh");
 				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 30);
 				system(cmd);
-				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
+				system("/home/pi/pir_response_end.sh &");
 
 			}
 			else
