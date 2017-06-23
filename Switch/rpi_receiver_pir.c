@@ -21,6 +21,14 @@ const pulse_t protocol_table[MAX_PROTOCOL] =
 	{P4_ENABLED,  265 * TL3,  265 * TH3,  265 * TL3,  265 * TH3, 1325 * TL3, 1325 * TH3, 10070 * TL3, 10070 * TH3, 2650 * TL3, 2650 * TH3, 130},
 };
 
+const pir_t pir_table[MAX_NUM_PIR] = 
+{
+	{PIR1_CODE1, PIR1_CODE2},
+	{PIR2_CODE1, PIR2_CODE2},
+	{PIR3_CODE1, PIR3_CODE2},
+	{PIR4_CODE1, PIR4_CODE2},
+};
+
 inline DELAY_USECONDS(unsigned int delay)
 {
 	start_time = *(volatile unsigned int *)(stm + 1);
@@ -50,7 +58,7 @@ unsigned char protocol;
 unsigned short i = 0u;
 unsigned short bits = 0u;
 unsigned short code[4] = {0};
-unsigned short prev_code[3][4] = {0};
+unsigned short prev_code[4][4] = {0};
 
 if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
 {
@@ -191,43 +199,31 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 
 			if (PIR == protocol)
 			{
-				unsigned char code_matched = 0;
-				if ((code[1] == PIR1_CODE1) && (code[2] == PIR1_CODE2) && ((code[3] & 0xFF00) == 0x2200))
+				unsigned char code_matched = 0u;
+				unsigned char num_pir = 0u;
+
+				for (num_pir = 0u; num_pir < MAX_NUM_PIR; num_pir++)
 				{
+					if ((code[1] == pir_table[num_pir].code1) && 
+						(code[2] == pir_table[num_pir].code2))
+					{
+						code_matched = num_pir + 1u;
 #ifdef DEBUG		
-					printf("PIR 1 detected\n");
+						printf("PIR %d detected\n", code_matched);
 #endif
-					code_matched = 1;
-				}
-				else if ((code[1] == PIR2_CODE1) && (code[2] == PIR2_CODE2) && ((code[3] & 0xFF00) == 0x2200))
-				{
-#ifdef DEBUG		
-					printf("PIR 2 detected\n");
-#endif
-					code_matched = 2;
-				}
-				else
-				{
-					code_matched = 0;
+						break;
+					}
+
 				}
 
 				if (0 != code_matched)
 				{
 					code_valid = 1;
 
-					system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
-
 					if ((code[0] & 0xFF) != (prev_code[code_matched - 1][0] & 0xFF))
 					{
-						if (1 == code_matched)
-						{
-							sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], code_matched);
-						}
-
-						if (2 == code_matched)
-						{
-							sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], code_matched);
-						}
+						system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
+						sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], code_matched);
 						system(cmd);
 						system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
 					}
@@ -261,7 +257,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 				code_valid = 1;
 
 				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
-				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 4);
+				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 40);
 				system(cmd);
 				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
 			}
@@ -272,8 +268,8 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 		}
 		else /* protocol == NEXA */
 		{ 
-//		if ((pls_dur[1] > protocol_table[protocol].preamble_min) && 
-//			(pls_dur[1] < protocol_table[protocol].preamble_max))
+		if ((pls_dur[1] > protocol_table[protocol].preamble_min) && 
+			(pls_dur[1] < protocol_table[protocol].preamble_max))
 		{
 			pulse_count = 0;
 
@@ -360,7 +356,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			{
 				code_valid = 1;
 				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_start.sh");
-				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 3);
+				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 30);
 				system(cmd);
 				system("sudo -u pi ssh -lpi 192.168.1.18 /home/pi/pir_response_end.sh &");
 

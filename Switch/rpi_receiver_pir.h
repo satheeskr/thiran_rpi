@@ -32,6 +32,10 @@ volatile unsigned int current_time = 0;
 #define PIR1_CODE2 0x1831
 #define PIR2_CODE1 0x6416
 #define PIR2_CODE2 0x042C
+#define PIR3_CODE1 0x125E
+#define PIR3_CODE2 0x2E8F
+#define PIR4_CODE1 0x2F76
+#define PIR4_CODE2 0x61F4
 
 #define BELL_CODE 0x704
 #define BYRON_CODE 0xB2C
@@ -40,7 +44,7 @@ volatile unsigned int current_time = 0;
 #define NEXA_MS1_CODE3 0xF699
 
 /* Tolerance percent */
-#define T0 10
+#define T0 20
 #define T1 20
 #define T2 20
 #define T3 20
@@ -73,6 +77,24 @@ NEXA,
 
 MAX_PROTOCOL
 }protocol_t;
+
+/* Number of PIRs */
+typedef enum
+{
+PIR1 = 0u,
+PIR2,
+PIR3,
+PIR4,
+
+MAX_NUM_PIR
+}pir_list_t;
+
+/* PIR code */
+typedef struct
+{
+	unsigned long code1;
+	unsigned long code2;
+}pir_t;
 
 /* Protocol configuration */
 typedef struct
