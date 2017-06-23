@@ -39,7 +39,7 @@ volatile unsigned int current_time = 0;
 #define PIR2_CODE3 0x2200
 #define PIR3_CODE1 0x125E
 #define PIR3_CODE2 0x2E8F
-#define PIR3_CODE3 0x6200
+#define PIR3_CODE3 0x2200
 #define PIR4_CODE1 0x2F76
 #define PIR4_CODE2 0x61F4
 #define PIR4_CODE3 0x2200
