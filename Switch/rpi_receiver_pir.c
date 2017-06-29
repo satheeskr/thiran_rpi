@@ -15,10 +15,16 @@ configured email address.
 
 const pulse_t protocol_table[MAX_PROTOCOL] = 
 {
-	{P1_ENABLED, 1300 * TL0, 1300 * TH0, 1040 * TL0, 1040 * TH0, 2080 * TL0, 2080 * TH0, 23500,       24500,          0,          0,       129},
-	{P2_ENABLED,  280 * TL1,  280 * TH1,  280 * TL1,  280 * TH1,  560 * TL1,  560 * TH1,  9980,       10180,          0,          0,        25},
-	{P3_ENABLED,  330 * TL2,  330 * TH2,  330 * TL2,  330 * TH2,  660 * TL2,  660 * TH2, 10692,       13068,          0,          0,        25},
-	{P4_ENABLED,  265 * TL3,  265 * TH3,  265 * TL3,  265 * TH3, 1325 * TL3, 1325 * TH3, 10070 * TL3, 10070 * TH3, 2650 * TL3, 2650 * TH3, 130},
+	/* PIR */
+	{P1_ENABLED, 1300 * TL1, 1300 * TH1, 1040 * TL1, 1040 * TH1, 2080 * TL1, 2080 * TH1, 23500,       24500,          0,          0,       129,	1,	129},
+	/* BELL */
+	{P2_ENABLED,  280 * TL2,  280 * TH2,  280 * TL2,  280 * TH2,  560 * TL2,  560 * TH2,  9980,       10180,          0,          0,        25,	1,	 25},
+	/* BYRON BELL */
+	{P3_ENABLED,  330 * TL3,  330 * TH3,  330 * TL3,  330 * TH3,  660 * TL3,  660 * TH3, 10692,       13068,          0,          0,        25,	1,	 25},
+	/* SMOKE */
+	{P4_ENABLED,  180 * TL4,  180 * TH4,  180 * TL4,  180 * TH4,  540 * TL4,  540 * TH4,  7050,        7150,          0,          0,        50,     0,	 48},
+	/* NEXA */
+	{P5_ENABLED,  265 * TL5,  265 * TH5,  265 * TL5,  265 * TH5, 1325 * TL5, 1325 * TH5, 10070 * TL5, 10070 * TH5, 2650 * TL5, 2650 * TH5, 130,	2,	130},
 };
 
 const pir_t pir_table[MAX_NUM_PIR] = 
@@ -58,7 +64,7 @@ unsigned char protocol;
 unsigned short i = 0u;
 unsigned short bits = 0u;
 unsigned short code[4] = {0};
-unsigned short prev_code[4][4] = {0};
+unsigned short prev_code[MAX_NUM_PIR][4] = {0};
 
 if((fp = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
 {
@@ -144,29 +150,29 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
         {
 		pls_dur[pulse_count++] = pulse_duration;
 
-		if (1u == protocol)
+		if (BELL == protocol)
 		{
-			if ((pls_dur[1] > protocol_table[3u].preamble_min) && 
-				(pls_dur[1] < protocol_table[3u].preamble_max))
+			if ((pls_dur[1u] > protocol_table[NEXA].preamble_min) && 
+				(pls_dur[1u] < protocol_table[NEXA].preamble_max))
 			{
-				protocol = 3u;
+				protocol = NEXA;
 			}
 		}
 
 		if(pulse_count == protocol_table[protocol].max_bits)
 		{
 		start_detected = FALSE;
-#ifdef DEBUG		
+#ifdef DEBUG
 		printf("protocol %d\n", protocol);
-		printf("pulse duration %d %d\n", pls_dur[0], pls_dur[1]);
+		printf("pulse start duration %d\n", pls_dur[0]);
 #endif
 		if (NEXA > protocol)
 		{
 			pulse_count = 0;
-			for( i = 1; i < protocol_table[protocol].max_bits; i+=2)
+			for( i = protocol_table[protocol].start_bit; i < protocol_table[protocol].end_bit; i+=2)
 			{
 				code[i / 32] <<= 1;
-#ifdef DEBUG		
+#ifdef DEBUG
 				printf("pulse duration %d %d\n", pls_dur[i], pls_dur[i+1]);
 #endif
 				if ((pls_dur[i] > protocol_table[protocol].short_min) && 
@@ -266,12 +272,18 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			}
 			else if ((BYRON == protocol) && (BYRON_CODE == code[0]))
 			{
-				code_valid = 1;
+				code_valid = 1u;
 
 				system("/home/pi/pir_response_start.sh");
 				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 40);
 				system(cmd);
 				system("/home/pi/pir_response_end.sh &");
+			}
+			else if ((SMOKE == protocol) && (SMOKE_CODE1 == code[0u]) && (SMOKE_CODE2 == code[1u]))
+			{
+				code_valid = 1u;
+				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 50);
+				system(cmd);
 			}
 			else
 			{
@@ -280,14 +292,17 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 		}
 		else /* protocol == NEXA */
 		{ 
-		if ((pls_dur[1] > protocol_table[protocol].preamble_min) && 
-			(pls_dur[1] < protocol_table[protocol].preamble_max))
+		if ((pls_dur[1u] > protocol_table[protocol].preamble_min) && 
+			(pls_dur[1u] < protocol_table[protocol].preamble_max))
 		{
-			pulse_count = 0;
+			pulse_count = 0u;
+#ifdef DEBUG
+			printf("pulse preamble duration %d\n", pls_dur[1u]);
+#endif
 
-			for( i = 2; i < protocol_table[protocol].max_bits; i+=4)
+			for( i = protocol_table[protocol].start_bit; i < protocol_table[protocol].end_bit; i+=4)
 			{
-				code[i / 64] <<= 1;
+				code[i / 64u] <<= 1u;
 #ifdef DEBUG
 				printf("pulse duration %d %d %d %d\n", pls_dur[i], pls_dur[i+1], pls_dur[i+2], pls_dur[i+3]);
 #endif
@@ -315,7 +330,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 				}
 				else
 				{
-#ifndef DEBUG		
+#ifndef DEBUG
 					/* Incorrect pulse, reset code */
 					code[0] = 0;
 					code[1] = 0;
@@ -385,27 +400,34 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 		}
 		}
 #ifdef DEBUG		
-		printf("code received is %0x %0x %0x %0x\n", code[0], code [1], code[2], code[3]);
+		printf("code received is %0x %0x %0x %0x\n", code[0u], code [1u], code[2u], code[3u]);
 #endif
-		for (bits = 0; bits < 256; bits++)
+		for (bits = 0u; bits < 256u; bits++)
 		{
-			pls_dur[bits] = 0;
+			pls_dur[bits] = 0u;
 		}
 
 		/* Reset code */
-		code[0] = 0;
-		code[1] = 0;
-		code[2] = 0;
-		code[3] = 0;
+		code[0u] = 0u;
+		code[1u] = 0u;
+		code[2u] = 0u;
+		code[3u] = 0u;
 		
 		/* Sleep only after receiving valid code */
-		if (1 == code_valid)
+		if (1u == code_valid)
 		{
-			sleep(2);
+			if (SMOKE == protocol)
+			{
+				sleep(SLEEP_TIME2);
+			}
+			else
+			{
+				sleep(SLEEP_TIME1);
+			}
 		}
 		
 		/* Reset code valid flag */
-		code_valid = 0;
+		code_valid = 0u;
 		}
         }
 }

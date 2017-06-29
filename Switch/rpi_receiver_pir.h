@@ -1,4 +1,5 @@
-#ifndef RPI_PIR_RECEIVER_H
+#ifndef RPI_RECEIVER_PIR_H
+#define RPI_RECEIVER_PIR_H
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -34,45 +35,62 @@ volatile unsigned int current_time = 0;
 #define PIR1_CODE1 0xF8DA
 #define PIR1_CODE2 0x1831
 #define PIR1_CODE3 0x2200
+
 #define PIR2_CODE1 0x6416
 #define PIR2_CODE2 0x042C
 #define PIR2_CODE3 0x2200
+
 #define PIR3_CODE1 0x125E
 #define PIR3_CODE2 0x2E8F
 #define PIR3_CODE3 0x2200
+
 #define PIR4_CODE1 0x2F76
 #define PIR4_CODE2 0x61F4
 #define PIR4_CODE3 0x2200
 
-#define BELL_CODE 0x704
-#define BYRON_CODE 0xB2C
+#define PIR5_CODE1 0x2F76
+#define PIR5_CODE2 0x61F4
+#define PIR5_CODE3 0x2200
+
+#define BELL_CODE      0x0704
+#define BYRON_CODE     0x0B2C
+
+#define SMOKE_CODE1    0x5502
+#define SMOKE_CODE2    0x0006
+
 #define NEXA_MS1_CODE1 0x5807
 #define NEXA_MS1_CODE2 0xF689
 #define NEXA_MS1_CODE3 0xF699
 
 /* Tolerance percent */
-#define T0 20
 #define T1 20
 #define T2 20
-#define T3 40
+#define T3 20
+#define T4 20
+#define T5 20
 
 /* Lower and upper limits */
-#define TL0 (1 - ((float)T0/100))
-#define TH0 (1 + ((float)T0/100))
 #define TL1 (1 - ((float)T1/100))
 #define TH1 (1 + ((float)T1/100))
 #define TL2 (1 - ((float)T2/100))
 #define TH2 (1 + ((float)T2/100))
 #define TL3 (1 - ((float)T3/100))
 #define TH3 (1 + ((float)T3/100))
+#define TL4 (1 - ((float)T4/100))
+#define TH4 (1 + ((float)T4/100))
+#define TL5 (1 - ((float)T5/100))
+#define TH5 (1 + ((float)T5/100))
 
 /* Enable/disable protocols */
-#define P1_ENABLED 1
-#define P2_ENABLED 1
-#define P3_ENABLED 1
+#define P1_ENABLED 0
+#define P2_ENABLED 0
+#define P3_ENABLED 0
 #define P4_ENABLED 1
+#define P5_ENABLED 0
 
 #define U32_MAX 4294967295uL
+#define SLEEP_TIME1  2u
+#define SLEEP_TIME2 60u
 
 /* Supported protocols */
 typedef enum
@@ -80,6 +98,7 @@ typedef enum
 PIR,
 BELL,
 BYRON,
+SMOKE,
 NEXA,
 
 MAX_PROTOCOL
@@ -119,6 +138,9 @@ typedef struct
         unsigned int preamble_min;
         unsigned int preamble_max;
         unsigned int max_bits;
+        unsigned int start_bit;
+        unsigned int end_bit;
+
 }pulse_t;
 
 #endif
