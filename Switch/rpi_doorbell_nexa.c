@@ -229,7 +229,7 @@ case 0: /* All Switches off */
 	bytecode = "00101110110001011011101110100000"; /* 0x2EC5BBA0 */
 	break;
 case 55: /* Magnetic Switch Alarm */
-        bytecode = "01011000000001111111011010001001"; /* 0x5807F689 */
+	bytecode = "00101110110001011011101010111010"; /* 0x2EC5BABA */
         break;
 default:
 	printf("Enter 1 to turn ON switch 1\n");
