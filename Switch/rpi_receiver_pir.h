@@ -17,9 +17,18 @@ volatile unsigned int current_time = 0;
 #define TRUE 1u
 #define FALSE 0u
 
+#define RPI_B1
+
+#if defined(RPI_B2)
+#define PERIPHERAL_BASE (0x3F000000)
+#elif defined(RPI_B1)
 #define PERIPHERAL_BASE (0x20000000)
+#else
+#error "RPI hardware version not defined"
+#endif
+
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
-#define STM_BASE (0x20003000)
+#define STM_BASE (PERIPHERAL_BASE + 0x3000)
 #define INPORT(a)               *(gpio + a/10) &= ~(unsigned int)(7<<((a%10)*3))
 #define OUTPORT(a)              *(gpio + a/10) |= (unsigned int)(1<<((a%10)*3))
 #define SET_PORT(a)             *(gpio + 7 + a/32) = (unsigned int)(1<<a)
@@ -82,10 +91,10 @@ volatile unsigned int current_time = 0;
 #define TH5 (1 + ((float)T5/100))
 
 /* Enable/disable protocols */
-#define P1_ENABLED 0
+#define P1_ENABLED 1
 #define P2_ENABLED 0
 #define P3_ENABLED 0
-#define P4_ENABLED 1
+#define P4_ENABLED 0
 #define P5_ENABLED 0
 
 #define U32_MAX 4294967295uL
