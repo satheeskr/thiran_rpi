@@ -17,9 +17,9 @@ volatile unsigned int current_time = 0;
 #define TRUE 1u
 #define FALSE 0u
 
-#define PERIPHERAL_BASE (0x20000000)
+#define PERIPHERAL_BASE (0x3F000000)
 #define GPIO_BASE (PERIPHERAL_BASE + 0x200000)
-#define STM_BASE (0x20003000)
+#define STM_BASE (PERIPHERAL_BASE + 0x3000)
 #define INPORT(a)               *(gpio + a/10) &= ~(unsigned int)(7<<((a%10)*3))
 #define OUTPORT(a)              *(gpio + a/10) |= (unsigned int)(1<<((a%10)*3))
 #define SET_PORT(a)             *(gpio + 7 + a/32) = (unsigned int)(1<<a)
@@ -30,7 +30,7 @@ volatile unsigned int current_time = 0;
 #define EVENT_CLEAR(a)          *(gpio + 16 + a/32) = (unsigned int)(1<<a)
 #define PIN_LEVEL(a)            (*(gpio + 13 + a/32)>>a)
 
-#define PORT_NUM 23u
+#define PORT_NUM 24u
 
 #define PIR1_CODE1 0xF8DA
 #define PIR1_CODE2 0x1831
@@ -84,9 +84,9 @@ volatile unsigned int current_time = 0;
 /* Enable/disable protocols */
 #define P1_ENABLED 0
 #define P2_ENABLED 0
-#define P3_ENABLED 0
+#define P3_ENABLED 1
 #define P4_ENABLED 1
-#define P5_ENABLED 0
+#define P5_ENABLED 1
 
 #define U32_MAX 4294967295uL
 #define SLEEP_TIME1  2u

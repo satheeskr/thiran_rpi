@@ -349,6 +349,7 @@ if (DETECT_EDGE(PORT_NUM) == 1u)
 			{
 				sprintf(cmd,"%s %0x %0x %0x %0x %d &", "/home/pi/webcam.sh", code[0], code[1], code[2], code[3], 99);
 				system(cmd);
+				code_valid = 1;
 			}
 			else if ((0x2EC5 == code[0]) && (0xBB90 == code[1]))
 			{
